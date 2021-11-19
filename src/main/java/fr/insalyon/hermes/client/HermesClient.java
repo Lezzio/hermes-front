@@ -55,7 +55,7 @@ public class HermesClient {
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
 
-    private List<LogChat> chats;
+    private List<ChatInfo> chats;
     private AccessChat currentChat;
     private Map<String, Boolean> userConnected;
     private boolean isConnected;

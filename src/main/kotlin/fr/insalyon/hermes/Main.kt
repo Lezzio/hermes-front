@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import fr.insalyon.hermes.client.HermesClient
+import fr.insalyon.hermes.model.ChatInfo
+import fr.insalyon.hermes.model.TextMessage
+import java.util.*
 
 @Composable
 @Preview
@@ -36,8 +39,18 @@ fun App() {
 
     DesktopMaterialTheme {
         Row {
-            Column(Modifier.width(250.dp).fillMaxHeight().background(Color(245, 245, 245))) {
+            Column(Modifier.width(250.dp).fillMaxHeight().verticalScroll(rememberScrollState()).background(Color(245, 245, 245))) {
                 Text("the left column")
+                repeat(100) {
+                    ConversationRow(
+                        chatInfo = ChatInfo(
+                            "Conversation Dark INSA",
+                            listOf(),
+                            TextMessage("bijour!", "Benoît", "fokz", Date())
+                        ),
+                        Modifier.align(Alignment.CenterHorizontally)
+                    )
+                }
             }
             Column(
                 Modifier.fillMaxWidth().fillMaxHeight()
@@ -85,7 +98,8 @@ fun App() {
                             // Clip image to be shaped as a circle
                             .clip(CircleShape)
                             .clickable {
-                                println("Clicked send icon")
+                                hermesClient.sendMessage(msgInput)
+                                println("Clicked to send $msgInput")
                             }
                     )
                     Spacer(modifier = Modifier.size(20.dp))
@@ -115,6 +129,42 @@ fun App() {
 enum class MessageType {
     SELF,
     OTHER
+}
+
+@Composable
+fun ConversationRow(chatInfo: ChatInfo, modifier: Modifier) {
+    // Add padding around our message
+    Row(
+        modifier = modifier.padding(all = 8.dp),
+//        horizontalArrangement = if(msg.messageType == MessageType.SELF) androidx.compose.foundation.layout.Arrangement.End else androidx.compose.foundation.layout.Arrangement.Start
+    ) {
+        Image(
+            painter = painterResource("people.svg"),
+            contentDescription = "Contact profile picture",
+            modifier = Modifier
+                // Set image size to 40 dp
+                .size(40.dp)
+                // Clip image to be shaped as a circle
+                .clip(CircleShape)
+        )
+
+        // Add a horizontal space between the image and the column
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column {
+            Text(
+                text = chatInfo.name,
+            )
+            // Add a vertical space between the author and message texts
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "${chatInfo.lastMessage.sender}: ${chatInfo.lastMessage.content}",
+                modifier = Modifier.padding(all = 4.dp),
+                style = MaterialTheme.typography.body2
+            )
+        }
+    }
 }
 
 data class Message(val author: String, val body: String, val messageType: MessageType)
