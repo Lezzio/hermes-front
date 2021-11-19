@@ -4,7 +4,8 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
@@ -28,16 +29,15 @@ fun App() {
     var text by remember { mutableStateOf("Hello, World!") }
 
     DesktopMaterialTheme {
-
         Row {
-            Column(Modifier.width(250.dp).fillMaxHeight()) {
+            Column(Modifier.width(250.dp).fillMaxHeight().background(Color(245, 245, 245))) {
                 Text("the left column")
             }
             Column(
                 Modifier.fillMaxWidth().fillMaxHeight()
             ) {
                 Column(
-                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).weight(1F)
+                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).weight(1F).background(Color.White)
                 ) {
                     repeat(20) {
                         MessageCard(
@@ -56,15 +56,20 @@ fun App() {
                         )
                     }
                 }
-                Row {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.background(Color.White)
+                ) {
                     var msgInput by rememberSaveable { mutableStateOf("") }
                     TextField(
                         value = msgInput,
                         onValueChange = {
                             msgInput = it
                         },
-                        label = { Text("Écrivez un message") }
+                        label = { Text("Écrivez un message") },
+                        modifier = Modifier.weight(1F)
                     )
+                    Spacer(modifier = Modifier.size(20.dp))
                     Image(
                         painter = painterResource("send.svg"),
                         contentDescription = "Contact profile picture",
@@ -77,6 +82,7 @@ fun App() {
                                 println("Clicked send icon")
                             }
                     )
+                    Spacer(modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -128,10 +134,19 @@ fun MessageCard(msg: Message, modifier: Modifier) {
         Spacer(modifier = Modifier.width(8.dp))
 
         Column {
-            Text(text = msg.author)
+            Text(
+                text = msg.author,
+            )
             // Add a vertical space between the author and message texts
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = msg.body)
+
+            Surface(shape = MaterialTheme.shapes.medium, elevation = 1.dp) {
+                Text(
+                    text = msg.body,
+                    modifier = Modifier.padding(all = 4.dp),
+                    style = MaterialTheme.typography.body2
+                )
+            }
         }
     }
 }
