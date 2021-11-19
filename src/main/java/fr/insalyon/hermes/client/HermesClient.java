@@ -20,8 +20,7 @@ import java.util.concurrent.Executors;
  */
 public class HermesClient {
 
-    private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {
-    };
+    private static final TypeToken<Message> messageTypeToken = new TypeToken<>() { };
     private static final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
             .of(Message.class, "type")
             .registerSubtype(GroupMessage.class)
@@ -62,7 +61,6 @@ public class HermesClient {
     private boolean isConnected;
     private boolean isLoaded;
 
-
     /**
      * HermesClient constructor
      */
@@ -75,23 +73,23 @@ public class HermesClient {
         this.isLoaded = false;
     }
 
-    /**
-     * @param args 0 => server address 1=> server port 2=> client username
-     * @throws IOException
-     */
-    public static void main(String[] args) throws IOException {
-        System.out.println("launching hermesClient");
-        if (args.length != 3) {
-            System.out.println("Usage: java HermesClient <HermesServer host> <HermesServer port> <HermesClient username>");
-            System.exit(1);
-        }
-        HermesClient hClient = new HermesClient(args[2]);
-        try {
-            hClient.connect(args[0], Integer.parseInt(args[1]));
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-    }
+//    /**
+//     * @param args 0 => server address 1=> server port 2=> client username
+//     * @throws IOException
+//     */
+//    public static void main(String[] args) throws IOException {
+//        System.out.println("launching hermesClient");
+//        if (args.length != 3) {
+//            System.out.println("Usage: java HermesClient <HermesServer host> <HermesServer port> <HermesClient username>");
+//            System.exit(1);
+//        }
+//        HermesClient hClient = new HermesClient(args[2]);
+//        try {
+//            hClient.connect(args[0], Integer.parseInt(args[1]));
+//        } catch (Exception e) {
+//            System.out.println(e);
+//        }
+//    }
 
     /**
      * Permet de connecter le client au serveur Hermes.

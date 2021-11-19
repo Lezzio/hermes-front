@@ -22,12 +22,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import fr.insalyon.hermes.client.HermesClient
 
 @Composable
 @Preview
 fun App() {
 //    var text by remember { mutableStateOf("Hello, World!") }
     var messages by remember { mutableStateOf("Hello, World!") }
+
+    val hermesClient = HermesClient("aguigal")
+    hermesClient.connect("127.0.0.1", 5000)
+    println("Connected")
 
     DesktopMaterialTheme {
         Row {
@@ -151,7 +156,6 @@ fun MessageCard(msg: Message, modifier: Modifier) {
         }
     }
 }
-
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication) {

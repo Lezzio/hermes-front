@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.0")
     implementation("com.google.code.gson:gson:2.8.9")
 }
 
@@ -30,7 +31,7 @@ compose.desktop {
         mainClass = "MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "hermes-front"
+            packageName = "hermes"
             packageVersion = "1.0.0"
         }
     }
