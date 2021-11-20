@@ -8,8 +8,9 @@ import fr.insalyon.hermes.model.AccessChat
 import fr.insalyon.hermes.model.LogChat
 import fr.insalyon.hermes.model.Message
 
-class AppState {
-    val messages: SnapshotStateList<Message> = mutableStateListOf()
-    val chats: SnapshotStateList<LogChat> = mutableStateListOf()
+data class AppState(
+    val messages: SnapshotStateList<Message> = mutableStateListOf(),
+    val chats: SnapshotStateList<LogChat> = mutableStateListOf(),
+    val usersConnected: MutableState<Map<String, Boolean>> = mutableStateOf(mapOf()),
     val currentChat: MutableState<AccessChat?> = mutableStateOf(null)
-}
+)

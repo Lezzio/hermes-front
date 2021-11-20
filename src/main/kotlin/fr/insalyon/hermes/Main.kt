@@ -26,17 +26,24 @@ import java.util.*
 @Preview
 fun App() {
 
-    val hermesClient = HermesClient("aguigal", AppState())
+    val appState = AppState()
+    val hermesClient = HermesClient("aguigal", appState)
     hermesClient.connect("127.0.0.1", 5000)
     println("Connected")
 
     DesktopMaterialTheme {
         Row {
-            Column(Modifier.width(250.dp).fillMaxHeight().verticalScroll(rememberScrollState()).background(Color(245, 245, 245))) {
+            //Chats column
+            Column(
+                Modifier.width(250.dp)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .background(Color(245, 245, 245))
+            ) {
                 Text(
                     "Créer un chat",
                     Modifier.clickable {
-                        hermesClient.createChat("channel 2")
+                        hermesClient.createChat("channel 3")
                     }
                 )
                 repeat(1) {
@@ -56,8 +63,9 @@ fun App() {
                     )
                 }
             }
+            //Current chat viewer
             Column(
-                Modifier.fillMaxWidth().fillMaxHeight()
+                Modifier.weight(1F).fillMaxHeight()
             ) {
                 Column(
                     Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).weight(1F).background(Color.White)
@@ -102,11 +110,26 @@ fun App() {
                             // Clip image to be shaped as a circle
                             .clip(CircleShape)
                             .clickable {
-                                hermesClient.sendMessage(msgInput)
-                                println("Clicked to send $msgInput")
+                                hermesClient.sendMessage(msgInput, "channel 3")
+                                println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
                             }
                     )
                     Spacer(modifier = Modifier.size(20.dp))
+                }
+            }
+            //Conversation users viewer
+            Column(
+                Modifier.width(250.dp)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .background(Color(245, 245, 245))
+            ) {
+                appState.usersConnected.value.entries.forEach {
+                    ConversationUserRow(
+                        username = it.key,
+                        connected = it.value,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
                 }
             }
         }
@@ -166,6 +189,43 @@ fun ConversationRow(logChat: LogChat, modifier: Modifier) {
                 text = "${logChat.message.sender}: ${logChat.message.content}",
                 modifier = Modifier.padding(all = 4.dp),
                 style = MaterialTheme.typography.body2
+            )
+        }
+    }
+}
+
+@Composable
+fun ConversationUserRow(username: String, connected: Boolean, modifier: Modifier) {
+    // Add padding around our message
+    Row(
+        modifier = modifier.padding(all = 8.dp),
+//        horizontalArrangement = if(msg.messageType == MessageType.SELF) androidx.compose.foundation.layout.Arrangement.End else androidx.compose.foundation.layout.Arrangement.Start
+    ) {
+        Image(
+            painter = painterResource("people.svg"),
+            contentDescription = "Contact profile picture",
+            modifier = Modifier
+                // Set image size to 40 dp
+                .size(40.dp)
+                // Clip image to be shaped as a circle
+                .clip(CircleShape)
+        )
+
+        // Add a horizontal space between the image and the column
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column {
+            Text(
+                text = username,
+            )
+            // Add a vertical space between the author and message texts
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = if (connected) "Connecté" else "Déconnecté",
+                modifier = Modifier.padding(all = 4.dp),
+                style = MaterialTheme.typography.body2,
+                color = if (connected) Color.Green else Color.Red
             )
         }
     }
