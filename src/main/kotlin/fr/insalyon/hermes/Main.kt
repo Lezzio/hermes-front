@@ -21,14 +21,12 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import fr.insalyon.hermes.AppState
 import fr.insalyon.hermes.client.HermesClient
-import fr.insalyon.hermes.model.ChatInfo
 import fr.insalyon.hermes.model.LogChat
 import fr.insalyon.hermes.model.TextMessage
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
 @Composable
 @Preview
 fun App() {
@@ -41,37 +39,50 @@ fun App() {
     println("Connected")
 
     DesktopMaterialTheme {
+
+        val askChatName = remember { mutableStateOf(false) }
+        var chatNameInput by rememberSaveable { mutableStateOf("") }
+
+        if (askChatName.value) {
+            AlertDialog(
+                onDismissRequest = {},
+                title = {
+                    Text(text = "New conversation")
+                },
+                text = {
+                    TextField(
+                        value = chatNameInput,
+                        onValueChange = {
+                            chatNameInput = it
+                        },
+                        label = { Text("Conversation's name") },
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            askChatName.value = false
+                        }
+                    ) {
+                        Text("Confirm")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            chatNameInput = ""
+                            askChatName.value = false
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
         Row {
             //Chats column
-            Column(
-                Modifier.width(250.dp)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .background(Color(245, 245, 245))
-            ) {
-                Text(
-                    "Créer un chat",
-                    Modifier.clickable {
-                        appState.hermesClient.value?.createChat("channel 3")
-                    }
-                )
-                repeat(1) {
-                    ConversationRow(
-                        logChat = LogChat(
-                            "Conversation Dark INSA",
-                            listOf("benoît"),
-                            TextMessage("bijour!", "Benoît", "fokz", Date())
-                        ),
-                        Modifier.align(Alignment.CenterHorizontally)
-                    )
-                }
-                appState.hermesClient.value?.appState?.chats?.forEach {
-                    ConversationRow(
-                        logChat = it,
-                        Modifier.align(Alignment.CenterHorizontally)
-                    )
-                }
-            }
+            chatPanel(appState = appState, askChatName)
             currentChatView(appState = appState, modifier = Modifier.weight(1F))
 
             //Conversation users viewer
@@ -93,6 +104,42 @@ fun App() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
+    Column(
+        Modifier.width(250.dp)
+            .fillMaxHeight()
+            .verticalScroll(rememberScrollState())
+            .background(Color(245, 245, 245))
+    ) {
+
+        OutlinedButton(
+            onClick = {
+                askChatName.value = true
+            },
+            border = BorderStroke(1.dp, Color.Black),
+            modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+        ) {
+            Text(text = "Create a conversation", color = Color.Blue)
+        }
+
+        ConversationRow(
+            logChat = LogChat(
+                "Conversation Dark INSA",
+                listOf("benoît"),
+                TextMessage("bijour!", "Benoît", "fokz", Date())
+            ),
+            Modifier.align(Alignment.Start)
+        )
+        appState.hermesClient.value?.appState?.chats?.forEach {
+            ConversationRow(
+                logChat = it,
+                Modifier.align(Alignment.Start)
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -132,7 +179,7 @@ fun currentChatView(appState: AppState, modifier: Modifier) {
                 onValueChange = {
                     msgInput = it
                 },
-                label = { Text("Écrivez un message") },
+                label = { Text("Type a message...") },
                 modifier = Modifier
                     .weight(1F)
                     .onPreviewKeyEvent {

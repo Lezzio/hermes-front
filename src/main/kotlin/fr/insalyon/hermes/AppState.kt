@@ -15,8 +15,8 @@ import fr.insalyon.hermes.model.TextMessage
 data class AppState(
     val username: MutableState<String> = mutableStateOf("aguigal"),
     val hermesClient: MutableState<HermesClient?> = mutableStateOf(null),
-    val messages: SnapshotStateList<TextMessage> = mutableStateListOf(),
     val chats: SnapshotStateList<LogChat> = mutableStateListOf(),
-    val usersConnected: MutableState<Map<String, Boolean>> = mutableStateOf(mapOf()),
-    val currentChat: MutableState<AccessChat?> = mutableStateOf(null)
+    val currentChat: MutableState<AccessChat?> = mutableStateOf(null),
+    val messages: SnapshotStateList<TextMessage> = mutableStateListOf(),
+    val usersConnected: MutableState<Map<String, Boolean>> = mutableStateOf(mapOf())
 )
