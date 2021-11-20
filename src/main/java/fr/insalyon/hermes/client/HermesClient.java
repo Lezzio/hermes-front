@@ -63,7 +63,7 @@ public class HermesClient {
 
     private List<LogChat> chats;
     private AccessChat currentChat;
-    private Map<String, Boolean> userConnected;
+    private Map<String, Boolean> usersConnected;
     private boolean isConnected;
     private boolean isLoaded;
     private List<Notification> notifications;
@@ -83,7 +83,7 @@ public class HermesClient {
         this.username = username;
         this.chats = new ArrayList<>();
         this.currentChat = null;
-        this.userConnected = new HashMap<>();
+        this.usersConnected = new HashMap<>();
         this.isConnected = false;
         this.isLoaded = false;
         this.notifications = new ArrayList<>();
@@ -92,7 +92,7 @@ public class HermesClient {
         this.appState = appState;
     }
 
-    public boolean isDesktopEnable() {
+    public boolean isDesktopAppActive() {
         return appState != null;
     }
 
@@ -158,8 +158,8 @@ public class HermesClient {
                                 this.previousConnection = alertConnected.getPreviousConnection();
                             }
                         } else {
-                            if (Objects.equals(alertConnected.getSender(), currentChat.getChatName())) {
-                                userConnected.put(alertConnected.getUserConnected(), true);
+                            if (currentChat != null && Objects.equals(alertConnected.getSender(), currentChat.getChatName())) {
+                                usersConnected.put(alertConnected.getUserConnected(), true);
                                 //TODO: list connected update
                             }
                         }
@@ -167,7 +167,7 @@ public class HermesClient {
                     case "AlertDisconnected":
                         AlertDisconnected alertDisconnected = (AlertDisconnected) receivedMessage;
                         if (Objects.equals(alertDisconnected.getSender(), currentChat.getChatName())) {
-                            userConnected.put(alertDisconnected.getUserDisconnected(), false);
+                            usersConnected.put(alertDisconnected.getUserDisconnected(), false);
                             //TODO: list connected update
                         }
                         break;
@@ -202,8 +202,12 @@ public class HermesClient {
                     case "GetChats":
                         GetChats getChats = (GetChats) receivedMessage;
                         chats = getChats.getChats();
+                        System.out.println("Chats size = " + chats.size());
                         if (chats.size() != 0) {
                             accessChat(chats.get(0).getName());
+                            if(isDesktopAppActive()) {
+                                appState.getChats().addAll(chats);
+                            }
                         } else {
                             isLoaded = true; //TODO : update page
                         }
@@ -216,7 +220,10 @@ public class HermesClient {
                     case "GetUsers":
                         GetUsers getUsers = (GetUsers) receivedMessage;
                         isLoaded = true;
-                        userConnected = getUsers.getUsersConnected();
+                        usersConnected = getUsers.getUsersConnected();
+                        if(isDesktopAppActive()) {
+                            appState.getUsersConnected().setValue(getUsers.getUsersConnected());
+                        }
                         //TODO : update page
                         break;
                     case "AlertMessage":
@@ -247,7 +254,7 @@ public class HermesClient {
                     case "LeaveChat":
                         LeaveChat leaveChat = (LeaveChat) receivedMessage;
                         if (currentChat != null && Objects.equals(leaveChat.getName(), this.currentChat.getChatName())) {
-                            userConnected.remove(leaveChat.getSender());
+                            usersConnected.remove(leaveChat.getSender());
                         }
                         break;
                     case "UpdateChat":
@@ -428,9 +435,9 @@ public class HermesClient {
      *
      * @param message
      */
-    public void sendMessage(String message) {
+    public void sendMessage(String message, String chatDestination) {
         if (socket != null) {
-            TextMessage fullMessage = new TextMessage(message, this.username, "server", new Date(System.currentTimeMillis()));
+            TextMessage fullMessage = new TextMessage(message, this.username, chatDestination, new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(fullMessage, messageTypeToken.getType()));
         }
     }
