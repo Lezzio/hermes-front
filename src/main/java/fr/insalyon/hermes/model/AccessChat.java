@@ -10,15 +10,31 @@ public class AccessChat extends Message {
     private List<TextMessage> messages;
     private String admin;
 
+    public void setChatName(String chatName) {
+        this.chatName = chatName;
+    }
+
+    public int getUsers() {
+        return users;
+    }
+
+    public List<TextMessage> getMessages() {
+        return messages;
+    }
+
+    public String getAdmin() {
+        return admin;
+    }
+
     public AccessChat(String sender, String destination, Date time, String chatName) {
         super(sender, destination, time);
         this.chatName = chatName;
         this.users = 0;
         this.messages = new ArrayList<TextMessage>();
-        this.admin="";
+        this.admin = "";
     }
 
-    public String getChatName(){
+    public String getChatName() {
         return this.chatName;
     }
 

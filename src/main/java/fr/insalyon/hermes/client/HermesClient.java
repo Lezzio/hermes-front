@@ -205,9 +205,11 @@ public class HermesClient {
                         }
                         break;
                     case "AccessChat":
-                        AccessChat accessChat = (AccessChat) receivedMessage;
-                        currentChat = accessChat;
+                        currentChat = (AccessChat) receivedMessage;
                         getUsers(currentChat.getChatName());
+                        if (isDesktopAppActive()) {
+                            appState.getCurrentChat().setValue(currentChat);
+                        }
                         break;
                     case "GetUsers":
                         GetUsers getUsers = (GetUsers) receivedMessage;

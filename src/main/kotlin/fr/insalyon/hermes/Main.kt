@@ -8,9 +8,13 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -20,14 +24,18 @@ import fr.insalyon.hermes.client.HermesClient
 import fr.insalyon.hermes.model.ChatInfo
 import fr.insalyon.hermes.model.LogChat
 import fr.insalyon.hermes.model.TextMessage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App() {
 
+    var username = "aguigal"
     val appState = AppState()
-    val hermesClient = HermesClient("aguigal", appState)
+    val hermesClient = HermesClient(username, appState)
     hermesClient.connect("127.0.0.1", 5000)
     println("Connected")
 
@@ -63,27 +71,23 @@ fun App() {
                     )
                 }
             }
+            val scrollState = rememberScrollState(Int.MAX_VALUE)
+            val coroutineScope = rememberCoroutineScope()
+
             //Current chat viewer
             Column(
                 Modifier.weight(1F).fillMaxHeight()
             ) {
                 Column(
-                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).weight(1F).background(Color.White)
+                    Modifier.fillMaxWidth().verticalScroll(scrollState).weight(1F).background(Color.White)
                 ) {
-                    repeat(20) {
+                    appState.currentChat.value?.messages?.forEach {
                         MessageCard(
                             msg = Message(
-                                author = "Thomas",
-                                body = "This is the message's content woww",
-                                MessageType.SELF
-                            ), modifier = Modifier.align(Alignment.End)
-                        )
-                        MessageCard(
-                            msg = Message(
-                                author = "Thomas",
-                                body = "This is the message's content woww",
-                                MessageType.OTHER
-                            ), modifier = Modifier.align(Alignment.Start)
+                                author = it.sender,
+                                body = it.content,
+                                if (it.sender == username) MessageType.SELF else MessageType.OTHER
+                            ), modifier = Modifier.align(if (it.sender == username) Alignment.End else Alignment.Start)
                         )
                     }
                 }
@@ -98,7 +102,21 @@ fun App() {
                             msgInput = it
                         },
                         label = { Text("Écrivez un message") },
-                        modifier = Modifier.weight(1F)
+                        modifier = Modifier
+                            .weight(1F)
+                            .onPreviewKeyEvent {
+                                if (it.key == Key.Enter) {
+                                    hermesClient.sendMessage(msgInput, "channel 3")
+                                    println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
+                                    msgInput = ""
+                                    coroutineScope.launch {
+                                        scrollState.animateScrollTo(Int.MAX_VALUE)
+                                    }
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
                     )
                     Spacer(modifier = Modifier.size(20.dp))
                     Image(
@@ -112,6 +130,10 @@ fun App() {
                             .clickable {
                                 hermesClient.sendMessage(msgInput, "channel 3")
                                 println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
+                                msgInput = ""
+                                coroutineScope.launch {
+                                    scrollState.animateScrollTo(Int.MAX_VALUE)
+                                }
                             }
                     )
                     Spacer(modifier = Modifier.size(20.dp))
