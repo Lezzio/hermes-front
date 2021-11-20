@@ -8,9 +8,13 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -20,15 +24,20 @@ import fr.insalyon.hermes.client.HermesClient
 import fr.insalyon.hermes.model.ChatInfo
 import fr.insalyon.hermes.model.LogChat
 import fr.insalyon.hermes.model.TextMessage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 @Preview
 fun App() {
 
-    val appState = AppState()
-    val hermesClient = HermesClient("aguigal", appState)
-    hermesClient.connect("127.0.0.1", 5000)
+    val appState = rememberSaveable { AppState() }
+    appState.username.value = "aguigal"
+    println(appState.username.value)
+    appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
+    appState.hermesClient.value?.connect("127.0.0.1", 5000)
     println("Connected")
 
     DesktopMaterialTheme {
@@ -43,7 +52,7 @@ fun App() {
                 Text(
                     "Créer un chat",
                     Modifier.clickable {
-                        hermesClient.createChat("channel 3")
+                        appState.hermesClient.value?.createChat("channel 3")
                     }
                 )
                 repeat(1) {
@@ -56,67 +65,15 @@ fun App() {
                         Modifier.align(Alignment.CenterHorizontally)
                     )
                 }
-                hermesClient.appState.chats.forEach {
+                appState.hermesClient.value?.appState?.chats?.forEach {
                     ConversationRow(
                         logChat = it,
                         Modifier.align(Alignment.CenterHorizontally)
                     )
                 }
             }
-            //Current chat viewer
-            Column(
-                Modifier.weight(1F).fillMaxHeight()
-            ) {
-                Column(
-                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).weight(1F).background(Color.White)
-                ) {
-                    repeat(20) {
-                        MessageCard(
-                            msg = Message(
-                                author = "Thomas",
-                                body = "This is the message's content woww",
-                                MessageType.SELF
-                            ), modifier = Modifier.align(Alignment.End)
-                        )
-                        MessageCard(
-                            msg = Message(
-                                author = "Thomas",
-                                body = "This is the message's content woww",
-                                MessageType.OTHER
-                            ), modifier = Modifier.align(Alignment.Start)
-                        )
-                    }
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.background(Color.White)
-                ) {
-                    var msgInput by rememberSaveable { mutableStateOf("") }
-                    TextField(
-                        value = msgInput,
-                        onValueChange = {
-                            msgInput = it
-                        },
-                        label = { Text("Écrivez un message") },
-                        modifier = Modifier.weight(1F)
-                    )
-                    Spacer(modifier = Modifier.size(20.dp))
-                    Image(
-                        painter = painterResource("send.svg"),
-                        contentDescription = "Contact profile picture",
-                        modifier = Modifier
-                            // Set image size to 40 dp
-                            .size(40.dp)
-                            // Clip image to be shaped as a circle
-                            .clip(CircleShape)
-                            .clickable {
-                                hermesClient.sendMessage(msgInput, "channel 3")
-                                println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
-                            }
-                    )
-                    Spacer(modifier = Modifier.size(20.dp))
-                }
-            }
+            currentChatView(appState = appState, modifier = Modifier.weight(1F))
+
             //Conversation users viewer
             Column(
                 Modifier.width(250.dp)
@@ -133,24 +90,88 @@ fun App() {
                 }
             }
         }
+    }
+}
 
-//        Column(modifier = Modifier.width(IntrinsicSize.Max)) {
-//            Button(onClick = {
-//                text = "Hello, Desktop!"
-//            }) {
-//                Text(text)
-//            }
-//            repeat(10) {
-//                MessageCard(
-//                    Message(
-//                        author = "Enitrat le S",
-//                        body = "Gros la blockchain c'est stylé"
-//                    )
-//                )
-//            }
-//        }
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun currentChatView(appState: AppState, modifier: Modifier) {
+    val scrollState = rememberScrollState(Int.MAX_VALUE)
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(scrollState) {
+        scrollState.animateScrollTo(Int.MAX_VALUE)
     }
 
+    //Current chat viewer
+    Column(
+        modifier.fillMaxHeight()
+    ) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(scrollState).weight(1F).background(Color.White)
+        ) {
+            appState.messages.forEach {
+                MessageCard(
+                    msg = Message(
+                        author = it.sender,
+                        body = it.content,
+                        if (it.sender == appState.username.value) MessageType.SELF else MessageType.OTHER
+                    ),
+                    modifier = Modifier.align(if (it.sender == appState.username.value) Alignment.End else Alignment.Start)
+                )
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.background(Color.White)
+        ) {
+            var msgInput by rememberSaveable { mutableStateOf("") }
+            TextField(
+                value = msgInput,
+                onValueChange = {
+                    msgInput = it
+                },
+                label = { Text("Écrivez un message") },
+                modifier = Modifier
+                    .weight(1F)
+                    .onPreviewKeyEvent {
+                        if (it.key == Key.Enter && msgInput.isNotEmpty() && msgInput.isNotBlank()) {
+                            appState.hermesClient.value?.sendMessage(msgInput, "channel 3")
+                            println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
+                            msgInput = ""
+                            coroutineScope.launch {
+                                scrollState.animateScrollTo(Int.MAX_VALUE)
+                            }
+                            true
+                        } else {
+                            false
+                        }
+                    }
+            )
+            Spacer(modifier = Modifier.size(20.dp))
+            Image(
+                painter = painterResource("send.svg"),
+                contentDescription = "Contact profile picture",
+                modifier = Modifier
+                    // Set image size to 40 dp
+                    .size(40.dp)
+                    // Clip image to be shaped as a circle
+                    .clip(CircleShape)
+                    .clickable {
+                        if (msgInput.isNotEmpty() && msgInput.isNotBlank()) {
+                            appState.hermesClient.value?.sendMessage(msgInput, "channel 3")
+                            println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
+                            msgInput = ""
+                            coroutineScope.launch {
+                                scrollState.animateScrollTo(Int.MAX_VALUE)
+                            }
+                        }
+                    }
+            )
+            Spacer(modifier = Modifier.size(20.dp))
+        }
+    }
 }
 
 enum class MessageType {

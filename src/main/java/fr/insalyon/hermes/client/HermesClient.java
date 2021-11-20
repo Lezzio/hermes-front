@@ -248,11 +248,12 @@ public class HermesClient {
                         }
                         break;
                     case "AccessChat":
-                        AccessChat accessChat = (AccessChat) receivedMessage;
-                        currentChat = accessChat;
+                        currentChat = (AccessChat) receivedMessage;
                         getUsers(currentChat.getChatName());
-
-                        if(!isDesktopAppActive()){
+                        if (isDesktopAppActive()) {
+                            appState.getCurrentChat().setValue(currentChat);
+                            appState.getMessages().addAll(currentChat.getMessages());
+                        } else {
                             System.out.println("Current position : "+accessChat.getChatName());
                             displayMessages();
                         }
@@ -373,12 +374,15 @@ public class HermesClient {
 
                             if(!isDesktopAppActive()){
                                 displayMessage(textMessage);
+                            } else {
+                                appState.getMessages().add(textMessage);
                             }
 
                         }
 
                             //TODO update order
-
+                        }
+                        break;
                     default:
                         break;
                 }
