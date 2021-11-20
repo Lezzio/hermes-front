@@ -39,46 +39,9 @@ fun App() {
     println("Connected")
 
     DesktopMaterialTheme {
-
         val askChatName = remember { mutableStateOf(false) }
-        var chatNameInput by rememberSaveable { mutableStateOf("") }
 
-        if (askChatName.value) {
-            AlertDialog(
-                onDismissRequest = {},
-                title = {
-                    Text(text = "New conversation")
-                },
-                text = {
-                    TextField(
-                        value = chatNameInput,
-                        onValueChange = {
-                            chatNameInput = it
-                        },
-                        label = { Text("Conversation's name") },
-                    )
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            askChatName.value = false
-                        }
-                    ) {
-                        Text("Confirm")
-                    }
-                },
-                dismissButton = {
-                    Button(
-                        onClick = {
-                            chatNameInput = ""
-                            askChatName.value = false
-                        }
-                    ) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
+        globalAskChatDialog(appState, askChatName)
 
         Row {
             //Chats column
@@ -106,6 +69,52 @@ fun App() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
+fun globalAskChatDialog(appState: AppState, askChatName: MutableState<Boolean>) {
+
+    var chatNameInput by rememberSaveable { mutableStateOf("") }
+
+    if (askChatName.value) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = {
+                Text(text = "New conversation")
+            },
+            text = {
+                TextField(
+                    value = chatNameInput,
+                    onValueChange = {
+                        chatNameInput = it
+                    },
+                    label = { Text("Conversation's name") },
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        appState.hermesClient.value?.createChat(chatNameInput)
+                        chatNameInput = ""
+                        askChatName.value = false
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        chatNameInput = ""
+                        askChatName.value = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
 fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
     Column(
         Modifier.width(250.dp)
@@ -113,8 +122,8 @@ fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
             .verticalScroll(rememberScrollState())
             .background(Color(245, 245, 245))
     ) {
-
         OutlinedButton(
+
             onClick = {
                 askChatName.value = true
             },
