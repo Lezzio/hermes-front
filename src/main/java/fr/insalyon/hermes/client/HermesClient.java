@@ -102,14 +102,22 @@ public class HermesClient {
      */
     public static void main(String[] args) throws IOException {
         System.out.println("launching hermesClient");
-        if (args.length != 3) {
-            System.out.println("Usage: java HermesClient <HermesServer host> <HermesServer port> <HermesClient username>");
-            System.exit(1);
-        }
-        HermesClient hClient = new HermesClient(args[2], null);
+        //if (args.length != 3) {
+        //    System.out.println("Usage: java HermesClient <HermesServer host> <HermesServer port> <HermesClient username>");
+        //    System.exit(1);
+        //}
+        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("UserName :");
+        String userName = stdIn.readLine();
+        System.out.println("Host IP :");
+        String host = stdIn.readLine();
+        System.out.println("Server Port :");
+        String port = stdIn.readLine();
+
+        HermesClient hClient = new HermesClient(userName, null);
 
         try {
-            hClient.connect(args[0], Integer.parseInt(args[1]));
+            hClient.connect(host, Integer.parseInt(port));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -321,15 +329,86 @@ public class HermesClient {
             while (true) {
                 line = stdIn.readLine();
                 if (line != null) {
-                    if (line.equals("exit")) {
-                        sendDisconnection();
+                    if(line.charAt(0) == '?'){
+                        line = line.substring(1, line.length());
+                        switch(line){
+                            case "chats":
+                                displayChats();
+                                break;
+                            case "connected":
+                                displayConnected();
+                                break;
+                            case "notifications":
+                                displayNotifications();
+                                break;
+                            case "messages":
+                                displayMessages();
+                                break;
+                            default :
+                                System.out.println("Command Unknown");
+                        }
+                    } else if (line.charAt(0)== '-'){
+                        line = line.substring(1, line.length());
+                    } else {
+                        if (line.equals("exit")) {
+                            sendDisconnection();
+                        }
+                        sendMessage(line);
                     }
-                    sendMessage(line);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void displayMessages() {
+        System.out.println("*****************");
+        if(currentChat == null){
+            System.out.println("no current chat");
+        } else {
+            //for(TextMessage textMessage : currentChat.getMessages())
+        }
+        System.out.println("*****************");
+    }
+
+    private void displayNotifications() {
+        System.out.println("*****************");
+        for(Notification notification : notifications) {
+            System.out.println("Notifications :" );
+            System.out.println(notification.getContent());
+            System.out.println(notification.getTime());
+        }
+        if(notifications.size()==0){
+            System.out.println("Notifications list empty");
+        }
+        System.out.println("*****************");
+    }
+
+    private void displayConnected() {
+        System.out.println("*****************");
+        if(currentChat == null){
+            System.out.println("no chat");
+        } else {
+            for (Map.Entry<String, Boolean> mapentry : userConnected.entrySet()) {
+                System.out.println(mapentry.getKey() +": "+ (mapentry.getValue()?"connected":"disconnected"));
+            }
+        }
+        System.out.println("*****************");
+    }
+
+    private void displayChats() {
+        System.out.println("*****************");
+        for (LogChat chat : chats) {
+
+            System.out.println("Chat : " +chat.getName());
+            System.out.println(chat.getMessage().getSender() +": "+chat.getMessage().getContent());
+            System.out.println(chat.getMessage().getTime());
+        }
+        if(chats.size()==0){
+            System.out.println("Chats list empty");
+        }
+        System.out.println("*****************");
     }
 
     /**
