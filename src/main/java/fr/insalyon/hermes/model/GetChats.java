@@ -5,22 +5,22 @@ import java.util.Date;
 import java.util.List;
 
 public class GetChats extends Message {
-    private List<ChatInfo> logChats;
+    private List<LogChat> logChats;
 
     public GetChats(String sender, String destination, Date time) {
         super(sender, destination, time);
-        this.logChats = new ArrayList<ChatInfo>();
+        this.logChats = new ArrayList<LogChat>();
     }
 
-    public void add(ChatInfo chat){
+    public void add(LogChat chat){
         logChats.add(chat);
     }
 
-    public void setLogChat(List<ChatInfo> logchats) {
+    public void setLogChat(List<LogChat> logchats) {
         this.logChats = logchats;
     }
 
-    public List<ChatInfo> getChats() {
+    public List<LogChat> getChats() {
         return logChats;
     }
 }

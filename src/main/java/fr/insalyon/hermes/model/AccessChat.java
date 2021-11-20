@@ -15,12 +15,13 @@ public class AccessChat extends Message {
         this.chatName = chatName;
         this.users = 0;
         this.messages = new ArrayList<TextMessage>();
-        this.admin = "";
+        this.admin="";
     }
 
-    public String getChatName() {
+    public String getChatName(){
         return this.chatName;
     }
+
 
     public void setUsers(int users) {
         this.users = users;
@@ -32,5 +33,13 @@ public class AccessChat extends Message {
 
     public void setAdmin(String admin) {
         this.admin = admin;
+    }
+
+    public void add(TextMessage textMessage) {
+        messages.add(textMessage);
+    }
+
+    public void setName(String chatName) {
+        this.chatName = chatName;
     }
 }

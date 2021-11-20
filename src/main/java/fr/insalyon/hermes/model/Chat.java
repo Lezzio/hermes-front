@@ -8,30 +8,30 @@ public class Chat {
     private int users;
     private List<TextMessage> messages;
 
-    public Chat(String chatName, int users, List<TextMessage> messages, String admin) {
+    public Chat(String chatName, int users, List<TextMessage> messages, String admin){
         this.chatName = chatName;
-        this.users = users;
+        this.users= users;
         this.messages = messages;
-        this.admin = admin;
+        this.admin =admin;
     }
 
     public void add(TextMessage message) {
         messages.add(message);
     }
 
-    public String getChatName() {
+    public String getChatName(){
         return chatName;
     }
 
-    public int getUsers() {
+    public int getUsers(){
         return users;
     }
 
-    public List<TextMessage> getMessages() {
+    public List<TextMessage> getMessages(){
         return messages;
     }
 
-    public String getAdmin() {
+    public String getAdmin(){
         return admin;
     }
 }

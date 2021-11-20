@@ -4,16 +4,9 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,32 +15,43 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import fr.insalyon.hermes.AppState
 import fr.insalyon.hermes.client.HermesClient
 import fr.insalyon.hermes.model.ChatInfo
+import fr.insalyon.hermes.model.LogChat
 import fr.insalyon.hermes.model.TextMessage
 import java.util.*
 
 @Composable
 @Preview
 fun App() {
-//    var text by remember { mutableStateOf("Hello, World!") }
-    var messages by remember { mutableStateOf("Hello, World!") }
 
-    val hermesClient = HermesClient("aguigal")
+    val hermesClient = HermesClient("aguigal", AppState())
     hermesClient.connect("127.0.0.1", 5000)
     println("Connected")
 
     DesktopMaterialTheme {
         Row {
             Column(Modifier.width(250.dp).fillMaxHeight().verticalScroll(rememberScrollState()).background(Color(245, 245, 245))) {
-                Text("the left column")
-                repeat(100) {
+                Text(
+                    "Créer un chat",
+                    Modifier.clickable {
+                        hermesClient.createChat("channel 2")
+                    }
+                )
+                repeat(1) {
                     ConversationRow(
-                        chatInfo = ChatInfo(
+                        logChat = LogChat(
                             "Conversation Dark INSA",
-                            listOf(),
+                            listOf("benoît"),
                             TextMessage("bijour!", "Benoît", "fokz", Date())
                         ),
+                        Modifier.align(Alignment.CenterHorizontally)
+                    )
+                }
+                hermesClient.appState.chats.forEach {
+                    ConversationRow(
+                        logChat = it,
                         Modifier.align(Alignment.CenterHorizontally)
                     )
                 }
@@ -132,7 +136,7 @@ enum class MessageType {
 }
 
 @Composable
-fun ConversationRow(chatInfo: ChatInfo, modifier: Modifier) {
+fun ConversationRow(logChat: LogChat, modifier: Modifier) {
     // Add padding around our message
     Row(
         modifier = modifier.padding(all = 8.dp),
@@ -153,13 +157,13 @@ fun ConversationRow(chatInfo: ChatInfo, modifier: Modifier) {
 
         Column {
             Text(
-                text = chatInfo.name,
+                text = logChat.name,
             )
             // Add a vertical space between the author and message texts
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "${chatInfo.lastMessage.sender}: ${chatInfo.lastMessage.content}",
+                text = "${logChat.message.sender}: ${logChat.message.content}",
                 modifier = Modifier.padding(all = 4.dp),
                 style = MaterialTheme.typography.body2
             )
