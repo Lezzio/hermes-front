@@ -7,6 +7,23 @@ import java.util.List;
 public class AccessChat extends Message {
     private String chatName;
     private int users;
+
+    public void setChatName(String chatName) {
+        this.chatName = chatName;
+    }
+
+    public int getUsers() {
+        return users;
+    }
+
+    public List<TextMessage> getMessages() {
+        return messages;
+    }
+
+    public String getAdmin() {
+        return admin;
+    }
+
     private List<TextMessage> messages;
     private String admin;
 

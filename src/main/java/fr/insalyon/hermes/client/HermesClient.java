@@ -208,6 +208,9 @@ public class HermesClient {
                         AccessChat accessChat = (AccessChat) receivedMessage;
                         currentChat = accessChat;
                         getUsers(currentChat.getChatName());
+                        if (isDesktopAppActive()) {
+                            appState.getCurrentChat().setValue(accessChat);
+                        }
                         break;
                     case "GetUsers":
                         GetUsers getUsers = (GetUsers) receivedMessage;
@@ -230,7 +233,7 @@ public class HermesClient {
                             LogChat logChat = new LogChat(createChat.getName(), users, new TextMessage("Chat create", createChat.getName(), createChat.getName(), new Date(System.currentTimeMillis())));
                             chats.add(logChat);
                             accessChat(logChat.getName());
-                            if(appState != null) {
+                            if(isDesktopAppActive()) {
                                 appState.getChats().add(logChat);
                             }
                         } else {
@@ -275,6 +278,9 @@ public class HermesClient {
                         TextMessage textMessage = (TextMessage) receivedMessage;
                         if (currentChat != null && Objects.equals(textMessage.getDestination(), currentChat.getChatName())) {
                             currentChat.add(textMessage);
+                            if(isDesktopAppActive()) {
+                                appState.getMessages().add(textMessage);
+                            }
                             //TODO update
                         } else {
                             for (LogChat chat : chats) {

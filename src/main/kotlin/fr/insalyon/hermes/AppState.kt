@@ -6,10 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import fr.insalyon.hermes.model.AccessChat
 import fr.insalyon.hermes.model.LogChat
-import fr.insalyon.hermes.model.Message
+import fr.insalyon.hermes.model.TextMessage
 
 data class AppState(
-    val messages: SnapshotStateList<Message> = mutableStateListOf(),
+    val messages: SnapshotStateList<TextMessage> = mutableStateListOf(),
     val chats: SnapshotStateList<LogChat> = mutableStateListOf(),
     val usersConnected: MutableState<Map<String, Boolean>> = mutableStateOf(mapOf()),
     val currentChat: MutableState<AccessChat?> = mutableStateOf(null)

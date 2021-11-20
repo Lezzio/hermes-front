@@ -3,6 +3,9 @@ import androidx.compose.desktop.DesktopMaterialTheme
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -26,8 +29,9 @@ import java.util.*
 @Preview
 fun App() {
 
+    var username = "aguigal"
     val appState = AppState()
-    val hermesClient = HermesClient("aguigal", appState)
+    val hermesClient = HermesClient(username, appState)
     hermesClient.connect("127.0.0.1", 5000)
     println("Connected")
 
@@ -63,27 +67,29 @@ fun App() {
                     )
                 }
             }
-            //Current chat viewer
+
+            val msgSize = appState.currentChat.value?.messages?.size ?: 0
+            val lazyListState = rememberLazyListState(msgSize)
+
+            LaunchedEffect(msgSize) {
+                lazyListState.scrollToItem(msgSize)
+            }
+
             Column(
-                Modifier.weight(1F).fillMaxHeight()
+                modifier = Modifier.fillMaxWidth().weight(1F).background(Color.White)
             ) {
-                Column(
-                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).weight(1F).background(Color.White)
+                //Current chat viewer
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1F).background(Color.White),
+                    state = lazyListState
                 ) {
-                    repeat(20) {
+                    items(appState.currentChat.value?.messages ?: listOf()) { message ->
                         MessageCard(
                             msg = Message(
-                                author = "Thomas",
-                                body = "This is the message's content woww",
-                                MessageType.SELF
-                            ), modifier = Modifier.align(Alignment.End)
-                        )
-                        MessageCard(
-                            msg = Message(
-                                author = "Thomas",
-                                body = "This is the message's content woww",
-                                MessageType.OTHER
-                            ), modifier = Modifier.align(Alignment.Start)
+                                author = message.sender,
+                                body = message.content,
+                                messageType = if (message.sender == username) MessageType.SELF else MessageType.OTHER
+                            )
                         )
                     }
                 }
@@ -112,27 +118,29 @@ fun App() {
                             .clickable {
                                 hermesClient.sendMessage(msgInput, "channel 3")
                                 println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
+                                msgInput = ""
                             }
                     )
                     Spacer(modifier = Modifier.size(20.dp))
                 }
             }
-            //Conversation users viewer
-            Column(
-                Modifier.width(250.dp)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .background(Color(245, 245, 245))
-            ) {
-                appState.usersConnected.value.entries.forEach {
-                    ConversationUserRow(
-                        username = it.key,
-                        connected = it.value,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                }
+        }
+        //Conversation users viewer
+        Column(
+            Modifier.width(250.dp)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .background(Color(245, 245, 245))
+        ) {
+            appState.usersConnected.value.entries.forEach {
+                ConversationUserRow(
+                    username = it.key,
+                    connected = it.value,
+                    modifier = Modifier.align(Alignment.Start)
+                )
             }
         }
+    }
 
 //        Column(modifier = Modifier.width(IntrinsicSize.Max)) {
 //            Button(onClick = {
@@ -149,8 +157,6 @@ fun App() {
 //                )
 //            }
 //        }
-    }
-
 }
 
 enum class MessageType {
@@ -234,10 +240,10 @@ fun ConversationUserRow(username: String, connected: Boolean, modifier: Modifier
 data class Message(val author: String, val body: String, val messageType: MessageType)
 
 @Composable
-fun MessageCard(msg: Message, modifier: Modifier) {
+fun MessageCard(msg: Message) {
     // Add padding around our message
     Row(
-        modifier = modifier.padding(all = 8.dp),
+        modifier = Modifier.padding(all = 8.dp),
 //        horizontalArrangement = if(msg.messageType == MessageType.SELF) androidx.compose.foundation.layout.Arrangement.End else androidx.compose.foundation.layout.Arrangement.Start
     ) {
         Image(
