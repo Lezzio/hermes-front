@@ -254,7 +254,7 @@ public class HermesClient {
                             appState.getCurrentChat().setValue(currentChat);
                             appState.getMessages().addAll(currentChat.getMessages());
                         } else {
-                            System.out.println("Current position : "+accessChat.getChatName());
+                            System.out.println("Current position : "+currentChat.getChatName());
                             displayMessages();
                         }
                         break;
@@ -381,11 +381,13 @@ public class HermesClient {
                         }
 
                             //TODO update order
-                        }
+
                         break;
                     default:
                         break;
+
                 }
+
 
 
             }

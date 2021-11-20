@@ -9,9 +9,7 @@ public class AccessChat extends Message {
     private String chatName;
     private int users;
 
-    public List<TextMessage> getMessages() {
-        return messages;
-    }
+
 
     private List<TextMessage> messages;
     private String admin;
@@ -20,17 +18,13 @@ public class AccessChat extends Message {
         this.chatName = chatName;
     }
 
-    public int getUsers() {
-        return users;
-    }
+
 
     public List<TextMessage> getMessages() {
         return messages;
     }
 
-    public String getAdmin() {
-        return admin;
-    }
+
 
     public AccessChat(String sender, String destination, Date time, String chatName) {
         super(sender, destination, time);
