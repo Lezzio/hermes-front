@@ -3,6 +3,7 @@ package fr.insalyon.hermes.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AccessChat extends Message {
     private String chatName;
@@ -30,7 +31,7 @@ public class AccessChat extends Message {
         super(sender, destination, time);
         this.chatName = chatName;
         this.users = 0;
-        this.messages = new ArrayList<TextMessage>();
+        this.messages = new CopyOnWriteArrayList<>();
         this.admin = "";
     }
 

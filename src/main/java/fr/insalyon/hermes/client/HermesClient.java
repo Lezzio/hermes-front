@@ -209,6 +209,7 @@ public class HermesClient {
                         getUsers(currentChat.getChatName());
                         if (isDesktopAppActive()) {
                             appState.getCurrentChat().setValue(currentChat);
+                            appState.getMessages().addAll(currentChat.getMessages());
                         }
                         break;
                     case "GetUsers":
@@ -277,6 +278,9 @@ public class HermesClient {
                         TextMessage textMessage = (TextMessage) receivedMessage;
                         if (currentChat != null && Objects.equals(textMessage.getDestination(), currentChat.getChatName())) {
                             currentChat.add(textMessage);
+                            if(isDesktopAppActive()) {
+                                appState.getMessages().add(textMessage);
+                            }
                             //TODO update
                         } else {
                             for (LogChat chat : chats) {
