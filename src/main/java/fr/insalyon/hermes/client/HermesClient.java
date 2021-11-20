@@ -42,7 +42,10 @@ public class HermesClient {
             .registerSubtype(GetUsersAddable.class)
             .registerSubtype(AddUserChat.class)
             .registerSubtype(AddNotification.class)
+            .registerSubtype(BanNotification.class)
+            .registerSubtype(UpdateChat.class)
             .registerSubtype(BanUserChat.class)
+            .registerSubtype(LeaveChat.class)
             .registerSubtype(GetUsers.class);
 
     private static final Gson gson = new GsonBuilder()
@@ -305,8 +308,9 @@ public class HermesClient {
                         break;
                     case "LeaveChat":
                         LeaveChat leaveChat = (LeaveChat) receivedMessage;
-                        if (currentChat != null && Objects.equals(leaveChat.getName(), this.currentChat.getChatName())) {
-                            usersConnected.remove(leaveChat.getSender());
+                        if(!isDesktopAppActive()){
+                            System.out.println("You have leave the chat :"+leaveChat.getName());
+                            getChats();
                         }
                         break;
                     case "UpdateChat":
@@ -331,7 +335,7 @@ public class HermesClient {
 
                         if(!isDesktopAppActive()){
                             System.out.println("Chat updated :");
-                            System.out.println(updateChat.getDestination() +"rename to"+updateChat.getChatName());
+                            System.out.println(updateChat.getDestination() +" rename to "+updateChat.getChatName());
                             System.out.println("Admin : "+updateChat.getAdmin());
                         }
                         //TODO updateChat name if needed in currentChat and list chats
@@ -351,6 +355,7 @@ public class HermesClient {
                                 if(Objects.equals(textMessage.getDestination(), textMessage.getSender())){
                                     String [] content = textMessage.getContent().split(" ");
                                     if ("added".equals(content[1])) {
+
                                         chat.addUser(content[0]);
                                     } else {
                                         chat.removeUser(content[0]);
@@ -503,14 +508,18 @@ public class HermesClient {
                                     break;
                                 case "update":
                                     if(currentChat!=null){
-                                        System.out.println("New name :");
-                                        String name = stdIn.readLine();
-                                        System.out.println("List of admin (all | admin1):");
-                                        String admin = stdIn.readLine();
-                                        if(Objects.equals(admin, "all") || usersConnected.containsKey(admin)){
-                                            updateChat(currentChat.getChatName(), name, admin);
+                                        if(Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)) {
+                                            System.out.println("New name :");
+                                            String chatName = stdIn.readLine();
+                                            System.out.println("List of admin (all | userName):");
+                                            String admin = stdIn.readLine();
+                                            if (Objects.equals(admin, "all") || usersConnected.containsKey(admin)) {
+                                                updateChat(currentChat.getChatName(), chatName, admin);
+                                            } else {
+                                                System.out.println("Error, this user isn't in the chat");
+                                            }
                                         } else {
-                                            System.out.println("Error, this user isn't in the chat");
+                                            System.out.println("Error, you are not allowed to do that");
                                         }
                                     } else {
                                         System.out.println("Error, no active chat");
