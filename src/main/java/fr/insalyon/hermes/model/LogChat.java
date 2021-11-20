@@ -1,6 +1,7 @@
 package fr.insalyon.hermes.model;
 
 import java.util.List;
+import java.util.Objects;
 
 public class LogChat {
     private String name;
@@ -52,4 +53,22 @@ public class LogChat {
     }
 
 
+    public void removeUser(String user) {
+        usersNumber--;
+        users.remove(user);
+    }
+
+    public void addUser(String user){
+        usersNumber++;
+        users.add(user);
+    }
+
+    public String getOtherName(String name) {
+        for(String user : users){
+            if(!Objects.equals(user, name)){
+                return user;
+            }
+        }
+        return "";
+    }
 }
