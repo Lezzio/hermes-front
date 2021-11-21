@@ -45,7 +45,7 @@ public class LogChat {
     }
 
     public void setTextMessage(TextMessage textMessage) {
-        this.message = message;
+        this.message = textMessage;
     }
 
     public void setName(String chatName) {
