@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,6 +47,7 @@ public class HermesClient {
             .registerSubtype(UpdateChat.class)
             .registerSubtype(BanUserChat.class)
             .registerSubtype(LeaveChat.class)
+            .registerSubtype(AlertDisconnected.class)
             .registerSubtype(GetUsers.class);
 
     private static final Gson gson = new GsonBuilder()
@@ -120,6 +122,11 @@ public class HermesClient {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("UserName :");
         String userName = stdIn.readLine();
+        while(userName.contains(" ") || userName.equals("all")){
+            System.err.println("Wrong format, the username is only one word and can't be equal tu all");
+            System.out.println("UserName :");
+            userName = stdIn.readLine();
+        }
         System.out.println("Host IP :");
         String host = stdIn.readLine();
         System.out.println("Server Port :");
@@ -130,9 +137,10 @@ public class HermesClient {
         try {
             hClient.connect(host, Integer.parseInt(port));
             hClient.getNotifications();
-            //hClient.getChats();
-        } catch (Exception e) {
-            e.printStackTrace();
+        }  catch (IOException ex) {
+            System.err.println("Error : could not connect to server " + host + " on port " + Integer.valueOf(port));
+        } catch (NumberFormatException ex) {
+            System.err.println("Error : you must set a correct port number");
         }
     }
 
@@ -212,7 +220,13 @@ public class HermesClient {
                         chats.removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
                         //TODO update notification and list chat panel
                         if (Objects.equals(currentChat.getChatName(), banNotification.getSender())) {
-                            accessChat(chats.get(0).getName());
+                            if(chats.size()>0){
+                                accessChat(chats.get(0).getName());
+                            } else {
+                                if(!isDesktopAppActive()){
+                                    System.out.println("Chats list is empty");
+                                }
+                            }
                         }
                         if(!isDesktopAppActive()){
                             displayAlert(banNotification.getContent());
@@ -234,7 +248,6 @@ public class HermesClient {
                     case "GetChats":
                         GetChats getChats = (GetChats) receivedMessage;
                         chats = getChats.getChats();
-                        System.out.println("Chats size = " + chats.size());
                         if (chats.size() != 0) {
                             accessChat(chats.get(0).getName());
                             if(isDesktopAppActive()) {
@@ -349,7 +362,7 @@ public class HermesClient {
                         }
 
                         for (LogChat chat : chats) {
-                            if (chat.getName().equals(textMessage.getSender())) {
+                            if (chat.getName().equals(textMessage.getDestination())) {
                                 chat.setTextMessage(textMessage);
 
                                 if(Objects.equals(textMessage.getDestination(), textMessage.getSender())){
@@ -396,12 +409,23 @@ public class HermesClient {
 
 
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
+            if(Objects.equals(e.getMessage(), "Socket closed")){
+                if(!isDesktopAppActive()){
+                    System.out.println("Disconnected");
+                    System.exit(0);
+                }
+            } else if(Objects.equals(e.getMessage(), "Connection reset")){
+                closeClient();
+                if(!isDesktopAppActive()){
+                    System.out.println("Connection with the server lost");
+                    System.exit(0);
+                }
+            } else {
+                e.printStackTrace();
+            }
         }
-        //TODO : kill of Connection reset
+
     }
 
 
@@ -499,7 +523,6 @@ public class HermesClient {
                                         } else if(Objects.equals(currentChat.getAdmin(), "all") && usersConnected.size() == 1){
                                             System.out.println("Error, you can't leave a chat where you are the admin");
                                         } else {
-                                            //TODO deal with the result
                                             leaveChat(currentChat.getChatName());
                                         }
                                     } else {
@@ -579,7 +602,7 @@ public class HermesClient {
                                 case "access":
                                     args[0]="";
                                     String name = String.join(" ", args);
-                                    createChat(name.substring(1));
+                                    name = name.substring(1);
                                     boolean valid = false;
                                     for(LogChat chat :  chats){
                                         if(chat.getName().equals(name)){
@@ -588,14 +611,13 @@ public class HermesClient {
                                     }
                                     if(valid){
                                         accessChat(name);
-                                        getUsers(name);
-                                        getUsersAddable();
                                     } else {
                                         System.out.println("Error, chat doesn't exist");
                                     }
                                     break;
                                 case "exit":
-                                    //TODO:
+                                    sendDisconnection();
+                                    closeClient();
                                     break;
                                 default:
                                     System.out.println("Command Unknown");
@@ -737,13 +759,10 @@ public class HermesClient {
      * Permet de fermet les flux et de terminer la
      * connexion avec le serveur
      *
-     * @throws IOException
      */
-    public void closeClient() throws IOException {
+    public void closeClient() {
         try {
             socket.close();
-            inStream.close();
-            outStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
