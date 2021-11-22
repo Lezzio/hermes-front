@@ -77,6 +77,16 @@ fun App() {
                     Text(text = "Add users", color = Color.Blue)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
+                OutlinedButton(
+                    onClick = {
+                        appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
+                    },
+                    border = BorderStroke(1.dp, Color.Black),
+                    modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                ) {
+                    Text(text = "Leave chat", color = Color.Blue)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
 
             }
         }

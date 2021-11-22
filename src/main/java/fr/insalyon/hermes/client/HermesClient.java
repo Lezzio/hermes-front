@@ -252,15 +252,18 @@ public class HermesClient {
                         GetChats getChats = (GetChats) receivedMessage;
                         chats = getChats.getChats();
                         if (chats.size() != 0) {
-                            accessChat(chats.get(0).getName());
                             if(isDesktopAppActive()) {
+                                appState.getChats().clear();
                                 appState.getChats().addAll(chats);
                             } else {
                                 displayChats();
                             }
+                            accessChat(chats.get(0).getName());
                         } else {
                             isLoaded = true; //TODO : update page
-
+                            if(isDesktopAppActive()) {
+                                appState.getChats().clear();
+                            }
                             if(!isDesktopAppActive()){
                                 System.out.println("Chats list is empty");
                             }
@@ -326,9 +329,10 @@ public class HermesClient {
                     case "LeaveChat":
                         LeaveChat leaveChat = (LeaveChat) receivedMessage;
                         if(!isDesktopAppActive()){
-                            System.out.println("You have leave the chat :"+leaveChat.getName());
-                            getChats();
+                            System.out.println("You have left the chat :" + leaveChat.getName());
                         }
+                        //Update the chats
+                        getChats();
                         break;
                     case "UpdateChat":
                         UpdateChat updateChat = (UpdateChat) receivedMessage;
