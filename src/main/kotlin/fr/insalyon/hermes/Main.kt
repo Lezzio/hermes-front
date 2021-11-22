@@ -32,7 +32,6 @@ import java.util.*
 fun App() {
 
     val appState = rememberSaveable { AppState() }
-    appState.username.value = "aguigal"
     println(appState.username.value)
     appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
     appState.hermesClient.value?.connect("127.0.0.1", 5000)
@@ -40,8 +39,10 @@ fun App() {
 
     DesktopMaterialTheme {
         val askChatName = remember { mutableStateOf(false) }
+        val askAddMember = remember { mutableStateOf(false) }
 
         globalAskChatDialog(appState, askChatName)
+        globalAddMemberDialog(appState, askAddMember)
 
         Row {
             //Chats column
@@ -62,6 +63,20 @@ fun App() {
                         modifier = Modifier.align(Alignment.Start)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedButton(
+                    onClick = {
+                        appState.hermesClient.value?.getAddable()
+                        askAddMember.value = true
+                    },
+                    border = BorderStroke(1.dp, Color.Black),
+                    modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                ) {
+                    Text(text = "Add users", color = Color.Blue)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+
             }
         }
     }
@@ -115,6 +130,69 @@ fun globalAskChatDialog(appState: AppState, askChatName: MutableState<Boolean>) 
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
+fun globalAddMemberDialog(appState: AppState, globalAddMemberDialog: MutableState<Boolean>) {
+
+    val selectedUsers = mutableStateListOf<String>()
+
+    if (globalAddMemberDialog.value) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = {
+                Text(text = "Add users")
+            },
+            text = {
+                if(appState.usersAddable.isEmpty()) {
+                    Column {
+                        Text(
+                            text = "No more user to add...",
+                            color = Color.Red
+                        )
+                    }
+                } else {
+                    Column {
+                        appState.usersAddable.forEach {
+                            Spacer(Modifier.height(5.dp))
+                            Row {
+                                Text(
+                                    text = it,
+                                    color = if(selectedUsers.contains(it)) Color.Green else Color.Black,
+                                    modifier = Modifier.clickable {
+                                        selectedUsers.add(it)
+                                    }
+                                )
+                            }
+                            Spacer(Modifier.height(5.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        appState.hermesClient.value?.addUsers(selectedUsers)
+                        selectedUsers.clear()
+                        globalAddMemberDialog.value = false
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        selectedUsers.clear()
+                        globalAddMemberDialog.value = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
 fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
     Column(
         Modifier.width(250.dp)
@@ -122,8 +200,9 @@ fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
             .verticalScroll(rememberScrollState())
             .background(Color(245, 245, 245))
     ) {
-        OutlinedButton(
 
+        Spacer(modifier = Modifier.height(10.dp))
+        OutlinedButton(
             onClick = {
                 askChatName.value = true
             },
@@ -132,19 +211,16 @@ fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
         ) {
             Text(text = "Create a conversation", color = Color.Blue)
         }
+        Spacer(modifier = Modifier.height(10.dp))
 
-        ConversationRow(
-            logChat = LogChat(
-                "Conversation Dark INSA",
-                listOf("benoît"),
-                TextMessage("bijour!", "Benoît", "fokz", Date())
-            ),
-            Modifier.align(Alignment.Start)
-        )
         appState.hermesClient.value?.appState?.chats?.forEach {
             ConversationRow(
                 logChat = it,
                 Modifier.align(Alignment.Start)
+                    .clickable {
+                        println("Access chat")
+                        appState.hermesClient.value?.accessChat(it.name)
+                    }
             )
         }
     }
@@ -193,7 +269,7 @@ fun currentChatView(appState: AppState, modifier: Modifier) {
                     .weight(1F)
                     .onPreviewKeyEvent {
                         if (it.key == Key.Enter && msgInput.isNotEmpty() && msgInput.isNotBlank()) {
-                            appState.hermesClient.value?.sendMessage(msgInput, "channel 3")
+                            appState.hermesClient.value?.sendMessage(msgInput, appState.currentChat.value?.chatName)
                             println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
                             msgInput = ""
                             coroutineScope.launch {

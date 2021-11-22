@@ -243,6 +243,9 @@ public class HermesClient {
                         //TODO update
                         if(!isDesktopAppActive()){
                             displayAddable();
+                        } else {
+                            appState.getUsersAddable().clear();
+                            appState.getUsersAddable().addAll(currentUserAddable);
                         }
                         break;
                     case "GetChats":
@@ -268,6 +271,7 @@ public class HermesClient {
                         getUsers(currentChat.getChatName());
                         if (isDesktopAppActive()) {
                             appState.getCurrentChat().setValue(currentChat);
+                            appState.getMessages().clear();
                             appState.getMessages().addAll(currentChat.getMessages());
                         } else {
                             System.out.println("Current position : "+currentChat.getChatName());
@@ -438,7 +442,7 @@ public class HermesClient {
         }
     }
 
-    private void accessChat(String name) {
+    public void accessChat(String name) {
         if (socket != null) {
             isLoaded = false;
             AccessChat accessChat = new AccessChat(this.username, "server", new Date(System.currentTimeMillis()), name);
@@ -789,21 +793,21 @@ public class HermesClient {
         }
     }
 
-    private void getAddable() {
+    public void getAddable() {
         if(socket != null) {
             GetUsersAddable getUsersAddable = new GetUsersAddable(this.username, currentChat.getChatName(), new Date());
             outStream.println(gson.toJson(getUsersAddable, messageTypeToken.getType()));
         }
     }
 
-    private void addUsers(List<String> users) {
+    public void addUsers(List<String> users) {
         if(socket != null) {
             AddUserChat addUserChat = new AddUserChat(this.username,currentChat.getChatName(),new Date(),currentChat.getChatName(),users);
             outStream.println(gson.toJson(addUserChat, messageTypeToken.getType()));
         }
     }
 
-    private void banUser(String userName) {
+    public void banUser(String userName) {
         if(socket != null) {
             BanUserChat banUserChat = new BanUserChat(this.username,currentChat.getChatName(),new Date(),currentChat.getChatName(),userName);
             outStream.println(gson.toJson(banUserChat, messageTypeToken.getType()));
