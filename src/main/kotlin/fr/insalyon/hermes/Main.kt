@@ -50,44 +50,45 @@ fun App() {
             currentChatView(appState = appState, modifier = Modifier.weight(1F))
 
             //Conversation users viewer
-            Column(
-                Modifier.width(250.dp)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .background(Color(245, 245, 245))
-            ) {
-                appState.usersConnected.value.entries.forEach {
-                    ConversationUserRow(
-                        appState = appState,
-                        username = it.key,
-                        connected = it.value,
-                        modifier = Modifier.align(Alignment.Start)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = {
-                        appState.hermesClient.value?.getAddable()
-                        askAddMember.value = true
-                    },
-                    border = BorderStroke(1.dp, Color.Black),
-                    modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+            if(appState.currentChat.value != null) {
+                Column(
+                    Modifier.width(250.dp)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .background(Color(245, 245, 245))
                 ) {
-                    Text(text = "Add users", color = Color.Blue)
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedButton(
-                    onClick = {
-                        appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
-                    },
-                    border = BorderStroke(1.dp, Color.Black),
-                    modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
-                ) {
-                    Text(text = "Leave chat", color = Color.Blue)
-                }
-                Spacer(modifier = Modifier.height(10.dp))
+                    appState.usersConnected.value.entries.forEach {
+                        ConversationUserRow(
+                            appState = appState,
+                            username = it.key,
+                            connected = it.value,
+                            modifier = Modifier.align(Alignment.Start)
+                        )
+                    }
 
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedButton(
+                        onClick = {
+                            appState.hermesClient.value?.getAddable()
+                            askAddMember.value = true
+                        },
+                        border = BorderStroke(1.dp, Color.Black),
+                        modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(text = "Add users", color = Color.Blue)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedButton(
+                        onClick = {
+                            appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
+                        },
+                        border = BorderStroke(1.dp, Color.Black),
+                        modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(text = "Leave chat", color = Color.Blue)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
             }
         }
     }
@@ -401,7 +402,10 @@ fun ConversationUserRow(appState: AppState, username: String, connected: Boolean
                 .size(15.dp)
                 .align(Alignment.CenterVertically)
                 .clickable {
-                    appState.hermesClient.value?.banUser(username)
+                    //Can't self ban
+                    if(username != appState.username.value) {
+                        appState.hermesClient.value?.banUser(username)
+                    }
                 }
         )
     }
