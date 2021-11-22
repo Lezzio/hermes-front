@@ -120,7 +120,7 @@ public class HermesClient {
         //    System.exit(1);
         //}
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("UserName :");
+        System.out.println("Username :");
         String userName = stdIn.readLine();
         while(userName.contains(" ") || userName.equals("all")){
             System.err.println("Wrong format, the username is only one word and can't be equal tu all");
@@ -372,10 +372,10 @@ public class HermesClient {
                                 if(Objects.equals(textMessage.getDestination(), textMessage.getSender())){
                                     String [] content = textMessage.getContent().split(" ");
                                     if ("added".equals(content[1])) {
-
                                         chat.addUser(content[0]);
                                     } else {
                                         chat.removeUser(content[0]);
+//                                        appState.getUsersConnected().getValue().remove(content[0]);
                                     }
                                 }
 
@@ -389,6 +389,11 @@ public class HermesClient {
                                     currentChat.setUsers(currentChat.getUsers() + 1);
                                     getUsers(currentChat.getChatName());
                                 } else {
+                                    if(isDesktopAppActive()) {
+                                        HashMap<String, Boolean> newUsers = new HashMap<>(appState.getUsersConnected().getValue());
+                                        newUsers.remove(content[0]);
+                                        appState.getUsersConnected().setValue(newUsers);
+                                    }
                                     usersConnected.remove(content[0]);
                                     currentChat.setUsers(currentChat.getUsers() - 1);
                                 }
@@ -401,9 +406,7 @@ public class HermesClient {
                             }
 
                         }
-
                             //TODO update order
-
                         break;
                     default:
                         break;
@@ -779,7 +782,7 @@ public class HermesClient {
         }
     }
 
-    private void leaveChat(String chatName) {
+    public void leaveChat(String chatName) {
         if(socket != null) {
             LeaveChat leaveChat = new LeaveChat(this.username, chatName, new Date(), chatName);
             outStream.println(gson.toJson(leaveChat, messageTypeToken.getType()));

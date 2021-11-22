@@ -58,6 +58,7 @@ fun App() {
             ) {
                 appState.usersConnected.value.entries.forEach {
                     ConversationUserRow(
+                        appState = appState,
                         username = it.key,
                         connected = it.value,
                         modifier = Modifier.align(Alignment.Start)
@@ -141,7 +142,7 @@ fun globalAddMemberDialog(appState: AppState, globalAddMemberDialog: MutableStat
                 Text(text = "Add users")
             },
             text = {
-                if(appState.usersAddable.isEmpty()) {
+                if (appState.usersAddable.isEmpty()) {
                     Column {
                         Text(
                             text = "No more user to add...",
@@ -155,7 +156,7 @@ fun globalAddMemberDialog(appState: AppState, globalAddMemberDialog: MutableStat
                             Row {
                                 Text(
                                     text = it,
-                                    color = if(selectedUsers.contains(it)) Color.Green else Color.Black,
+                                    color = if (selectedUsers.contains(it)) Color.Green else Color.Black,
                                     modifier = Modifier.clickable {
                                         selectedUsers.add(it)
                                     }
@@ -348,7 +349,7 @@ fun ConversationRow(logChat: LogChat, modifier: Modifier) {
 }
 
 @Composable
-fun ConversationUserRow(username: String, connected: Boolean, modifier: Modifier) {
+fun ConversationUserRow(appState: AppState, username: String, connected: Boolean, modifier: Modifier) {
     // Add padding around our message
     Row(
         modifier = modifier.padding(all = 8.dp),
@@ -381,6 +382,18 @@ fun ConversationUserRow(username: String, connected: Boolean, modifier: Modifier
                 color = if (connected) Color.Green else Color.Red
             )
         }
+        Spacer(modifier = Modifier.width(15.dp))
+        Image(
+            painter = painterResource("x.png"),
+            contentDescription = "Delete user",
+            modifier = Modifier
+                // Set image size to 40 dp
+                .size(15.dp)
+                .align(Alignment.CenterVertically)
+                .clickable {
+                    appState.hermesClient.value?.banUser(username)
+                }
+        )
     }
 }
 
