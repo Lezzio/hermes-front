@@ -25,12 +25,16 @@ import fr.insalyon.hermes.model.LogChat
 import kotlinx.coroutines.launch
 import java.util.*
 
+var hermesClient: HermesClient? = null
+
 @Composable
 @Preview
-fun App(appState: AppState) {
-    println(appState.username.value)
+fun App() {
 
     DesktopMaterialTheme {
+
+        val appState = rememberSaveable { AppState() }
+
         if (appState.username.value == null) {
             println("Asking user")
             Row {
@@ -43,6 +47,7 @@ fun App(appState: AppState) {
             appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
             if(appState.hermesClient.value?.isConnected == false) {
                 appState.hermesClient.value?.connect("127.0.0.1", 5000)
+                hermesClient = appState.hermesClient.value
                 println("Connected")
             }
 
@@ -79,15 +84,19 @@ fun App(appState: AppState) {
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedButton(
-                            onClick = {
-                                appState.hermesClient.value?.getAddable()
-                                askAddMember.value = true
-                            },
-                            border = BorderStroke(1.dp, Color.Black),
-                            modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
-                        ) {
-                            Text(text = "Add users", color = Color.Blue)
+                        val admin = appState.currentChat.value?.admin
+
+                        if ((admin.equals(appState.username.value) || admin.equals("all")) && appState.username.value != appState.username.value) {
+                            OutlinedButton(
+                                onClick = {
+                                    appState.hermesClient.value?.getAddable()
+                                    askAddMember.value = true
+                                },
+                                border = BorderStroke(1.dp, Color.Black),
+                                modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                            ) {
+                                Text(text = "Add users", color = Color.Blue)
+                            }
                         }
                         Spacer(modifier = Modifier.height(10.dp))
                         OutlinedButton(
@@ -314,7 +323,7 @@ fun currentChatView(appState: AppState, modifier: Modifier) {
     val scrollState = rememberScrollState(Int.MAX_VALUE)
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(scrollState) {
+    LaunchedEffect(appState.messages.size) {
         scrollState.animateScrollTo(Int.MAX_VALUE)
     }
 
@@ -525,13 +534,11 @@ fun MessageCard(msg: Message, modifier: Modifier) {
 
 fun main() = application {
 
-    val appState = rememberSaveable { AppState() }
-
     Window(onCloseRequest = {
-        appState.hermesClient.value?.closeClient()
+        hermesClient?.closeClient()
         exitApplication()
     }
     ) {
-        App(appState)
+        App()
     }
 }

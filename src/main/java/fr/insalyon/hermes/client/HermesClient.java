@@ -123,7 +123,7 @@ public class HermesClient {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Username :");
         String userName = stdIn.readLine();
-        while(userName.contains(" ") || userName.equals("all")){
+        while (userName.contains(" ") || userName.equals("all")) {
             System.err.println("Wrong format, the username is only one word and can't be equal tu all");
             System.out.println("UserName :");
             userName = stdIn.readLine();
@@ -138,13 +138,12 @@ public class HermesClient {
         try {
             hClient.connect(host, Integer.parseInt(port));
             hClient.getNotifications();
-        }  catch (IOException ex) {
+        } catch (IOException ex) {
             System.err.println("Error : could not connect to server " + host + " on port " + Integer.valueOf(port));
         } catch (NumberFormatException ex) {
             System.err.println("Error : you must set a correct port number");
         }
     }
-
 
 
     /**
@@ -187,19 +186,20 @@ public class HermesClient {
                             if (alertConnected.getPreviousConnection() != null) {
                                 this.previousConnection = alertConnected.getPreviousConnection();
                             }
-                            if(!isDesktopAppActive()){
+                            if (!isDesktopAppActive()) {
                                 displayAlert("Connection success");
                             }
                         } else {
                             if (currentChat != null && Objects.equals(alertConnected.getSender(), currentChat.getChatName())) {
                                 usersConnected.put(alertConnected.getUserConnected(), true);
-                                if(isDesktopAppActive()) {
-                                    Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
-                                    appState.getUsersConnected().setValue(newUsersConnected);
+                                if (isDesktopAppActive()) {
+                                    getUsers(currentChat.getChatName());
+//                                    Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
+//                                    appState.getUsersConnected().setValue(newUsersConnected);
                                 }
                                 //TODO: list connected update
-                                if(!isDesktopAppActive()){
-                                    displayAlert(alertConnected.getUserConnected()+" connected in the chat");
+                                if (!isDesktopAppActive()) {
+                                    displayAlert(alertConnected.getUserConnected() + " connected in the chat");
                                 }
                             }
                         }
@@ -209,15 +209,18 @@ public class HermesClient {
                         System.out.println("Got alert disconnected");
                         if (Objects.equals(alertDisconnected.getSender(), currentChat.getChatName())) {
                             usersConnected.put(alertDisconnected.getUserDisconnected(), false);
-                            if(isDesktopAppActive()) {
-                                System.out.println("Disconnected user : " + alertDisconnected.getUserDisconnected());
-                                Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
-                                appState.getUsersConnected().setValue(newUsersConnected);
+                            System.out.println("Alert disconnected " + alertDisconnected.getSender() + " - " + currentChat.getChatName());
+                            if (isDesktopAppActive()) {
+                                System.out.println("Asking users update");
+                                getUsers(currentChat.getChatName());
+//                                System.out.println("Disconnected user : " + alertDisconnected.getUserDisconnected());
+//                                Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
+//                                appState.getUsersConnected().setValue(newUsersConnected);
                             }
 
                             //TODO: list connected update
-                            if(!isDesktopAppActive()){
-                                displayAlert(alertDisconnected.getUserDisconnected()+" disconnecting from the chat");
+                            if (!isDesktopAppActive()) {
+                                displayAlert(alertDisconnected.getUserDisconnected() + " disconnecting from the chat");
                             }
                         }
                         break;
@@ -226,7 +229,7 @@ public class HermesClient {
                         notifications.add(addNotification);
                         chats.add(addNotification.getChat());
                         //TODO update notification and list chat panel
-                        if(!isDesktopAppActive()){
+                        if (!isDesktopAppActive()) {
                             displayAlert(addNotification.getContent());
                         } else {
                             //Add the new chat in app state (because the user has been added to a new chat)
@@ -239,20 +242,21 @@ public class HermesClient {
                         chats.removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
                         //TODO update notification and list chat panel
                         if (Objects.equals(currentChat.getChatName(), banNotification.getSender())) {
-                            if(chats.size()>0){
+                            if (chats.size() > 0) {
                                 accessChat(chats.get(0).getName());
                             } else {
-                                if(!isDesktopAppActive()){
+                                if (!isDesktopAppActive()) {
                                     System.out.println("Chats list is empty");
                                 }
                             }
                         }
-                        if(isDesktopAppActive()) {
+                        if (isDesktopAppActive()) {
                             appState.getNotification().setValue(new Pair<>(banNotification.getContent(), true));
-                            //Update the available chats
-                            appState.getChats().removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
+                            //Update the available chatsf
+                            //appState.getChats().removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
+                            getChats();
                         }
-                        if(!isDesktopAppActive()){
+                        if (!isDesktopAppActive()) {
                             displayAlert(banNotification.getContent());
                         }
                         break;
@@ -265,7 +269,7 @@ public class HermesClient {
                         GetUsersAddable getUsersAddable = (GetUsersAddable) receivedMessage;
                         currentUserAddable = getUsersAddable.getUsers();
                         //TODO update
-                        if(!isDesktopAppActive()){
+                        if (!isDesktopAppActive()) {
                             displayAddable();
                         } else {
                             appState.getUsersAddable().clear();
@@ -276,7 +280,7 @@ public class HermesClient {
                         GetChats getChats = (GetChats) receivedMessage;
                         chats = getChats.getChats();
                         if (chats.size() != 0) {
-                            if(isDesktopAppActive()) {
+                            if (isDesktopAppActive()) {
                                 appState.getChats().clear();
                                 appState.getChats().addAll(chats);
                             } else {
@@ -285,12 +289,12 @@ public class HermesClient {
                             accessChat(chats.get(0).getName());
                         } else {
                             isLoaded = true; //TODO : update page
-                            if(isDesktopAppActive()) {
+                            if (isDesktopAppActive()) {
                                 appState.getChats().clear();
                                 appState.getCurrentChat().setValue(null);
                                 appState.getMessages().clear();
                             }
-                            if(!isDesktopAppActive()){
+                            if (!isDesktopAppActive()) {
                                 System.out.println("Chats list is empty");
                             }
                         }
@@ -303,7 +307,7 @@ public class HermesClient {
                             appState.getMessages().clear();
                             appState.getMessages().addAll(currentChat.getMessages());
                         } else {
-                            System.out.println("Current position : "+currentChat.getChatName());
+                            System.out.println("Current position : " + currentChat.getChatName());
                             displayMessages();
                         }
                         break;
@@ -311,7 +315,11 @@ public class HermesClient {
                         GetUsers getUsers = (GetUsers) receivedMessage;
                         isLoaded = true;
                         usersConnected = getUsers.getUsersConnected();
-                        if(isDesktopAppActive()) {
+                        if (isDesktopAppActive()) {
+                            System.out.println("Updating users");
+                            usersConnected.forEach((user, connected) -> {
+                                System.out.println("User = " + user + " connected = " + connected);
+                            });
                             appState.getUsersConnected().setValue(getUsers.getUsersConnected());
                         } else {
                             displayConnected();
@@ -320,7 +328,7 @@ public class HermesClient {
                         break;
                     case "AlertMessage":
                         AlertMessage alertMessage = (AlertMessage) receivedMessage;
-                        if(!isDesktopAppActive()) {
+                        if (!isDesktopAppActive()) {
                             displayAlert(alertMessage.getContent());
                         } else {
                             appState.getNotification().setValue(new Pair<>(alertMessage.getContent(), true));
@@ -335,13 +343,13 @@ public class HermesClient {
                             LogChat logChat = new LogChat(createChat.getName(), users, new TextMessage("Chat create", createChat.getName(), createChat.getName(), new Date(System.currentTimeMillis())));
                             chats.add(logChat);
                             accessChat(logChat.getName());
-                            if(isDesktopAppActive()) {
+                            if (isDesktopAppActive()) {
                                 appState.getChats().add(logChat);
                             } else {
                                 System.out.println("Chat created");
                             }
                         } else {
-                            if(isDesktopAppActive()) {
+                            if (isDesktopAppActive()) {
 
                             } else {
                                 System.out.println("Chat already used, change the name !");
@@ -356,7 +364,7 @@ public class HermesClient {
                         break;
                     case "LeaveChat":
                         LeaveChat leaveChat = (LeaveChat) receivedMessage;
-                        if(!isDesktopAppActive()){
+                        if (!isDesktopAppActive()) {
                             System.out.println("You have left the chat :" + leaveChat.getName());
                         }
                         //Update the chats
@@ -382,10 +390,10 @@ public class HermesClient {
                             currentChat.setAdmin(updateChat.getAdmin());
                         }
 
-                        if(!isDesktopAppActive()) {
+                        if (!isDesktopAppActive()) {
                             System.out.println("Chat updated :");
-                            System.out.println(updateChat.getDestination() +" rename to "+updateChat.getChatName());
-                            System.out.println("Admin : "+updateChat.getAdmin());
+                            System.out.println(updateChat.getDestination() + " rename to " + updateChat.getChatName());
+                            System.out.println("Admin : " + updateChat.getAdmin());
                         }
                         //TODO updateChat name if needed in currentChat and list chats
                         //TODO update access if admin have changed
@@ -393,16 +401,16 @@ public class HermesClient {
                     case "TextMessage":
                         TextMessage textMessage = (TextMessage) receivedMessage;
 
-                        if(!isDesktopAppActive()){
-                            System.out.println("New message in chat :"+ textMessage.getDestination());
+                        if (!isDesktopAppActive()) {
+                            System.out.println("New message in chat :" + textMessage.getDestination());
                         }
 
                         for (LogChat chat : chats) {
                             if (chat.getName().equals(textMessage.getDestination())) {
                                 chat.setTextMessage(textMessage);
 
-                                if(Objects.equals(textMessage.getDestination(), textMessage.getSender())){
-                                    String [] content = textMessage.getContent().split(" ");
+                                if (Objects.equals(textMessage.getDestination(), textMessage.getSender())) {
+                                    String[] content = textMessage.getContent().split(" ");
                                     if ("added".equals(content[1])) {
                                         chat.addUser(content[0]);
                                     } else {
@@ -415,14 +423,14 @@ public class HermesClient {
                         }
                         if (currentChat != null && Objects.equals(textMessage.getDestination(), currentChat.getChatName())) {
                             currentChat.add(textMessage);
-                            if(Objects.equals(textMessage.getDestination(), textMessage.getSender())){
-                                String [] content = textMessage.getContent().split(" ");
+                            if (Objects.equals(textMessage.getDestination(), textMessage.getSender())) {
+                                String[] content = textMessage.getContent().split(" ");
                                 //Text message that a user has been added
                                 if ("added".equals(content[1])) {
                                     currentChat.setUsers(currentChat.getUsers() + 1);
                                     getUsers(currentChat.getChatName());
                                 } else { //Text message that a user has been removed
-                                    if(isDesktopAppActive()) {
+                                    if (isDesktopAppActive()) {
                                         HashMap<String, Boolean> newUsers = new HashMap<>(appState.getUsersConnected().getValue());
                                         newUsers.remove(content[0]);
                                         appState.getUsersConnected().setValue(newUsers);
@@ -432,14 +440,14 @@ public class HermesClient {
                                 }
                             }
 
-                            if(!isDesktopAppActive()){
+                            if (!isDesktopAppActive()) {
                                 displayMessage(textMessage);
                             } else {
                                 appState.getMessages().add(textMessage);
                             }
 
                         }
-                            //TODO update order
+                        //TODO update order
                         break;
                     default:
                         break;
@@ -447,17 +455,16 @@ public class HermesClient {
                 }
 
 
-
             }
         } catch (Exception e) {
-            if(Objects.equals(e.getMessage(), "Socket closed")){
-                if(!isDesktopAppActive()){
+            if (Objects.equals(e.getMessage(), "Socket closed")) {
+                if (!isDesktopAppActive()) {
                     System.out.println("Disconnected");
                     System.exit(0);
                 }
-            } else if(Objects.equals(e.getMessage(), "Connection reset")){
+            } else if (Objects.equals(e.getMessage(), "Connection reset")) {
                 closeClient();
-                if(!isDesktopAppActive()){
+                if (!isDesktopAppActive()) {
                     System.out.println("Connection with the server lost");
                     System.exit(0);
                 }
@@ -467,8 +474,6 @@ public class HermesClient {
         }
 
     }
-
-
 
 
     private void getUsers(String chatName) {
@@ -494,7 +499,7 @@ public class HermesClient {
     }
 
     private void getNotifications() {
-        if(socket != null) {
+        if (socket != null) {
             GetNotifications getNotifications = new GetNotifications(this.username, "server", new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(getNotifications, messageTypeToken.getType()));
         }
@@ -507,9 +512,9 @@ public class HermesClient {
             while (true) {
                 line = stdIn.readLine();
                 if (line != null) {
-                    if(line.charAt(0) == '?'){
+                    if (line.charAt(0) == '?') {
                         line = line.substring(1);
-                        switch(line){
+                        switch (line) {
                             case "chats":
                                 displayChats();
                                 break;
@@ -523,44 +528,44 @@ public class HermesClient {
                                 displayMessages();
                                 break;
                             case "position":
-                                if(currentChat==null){
+                                if (currentChat == null) {
                                     System.out.println("Main Menu");
                                 } else {
                                     System.out.println(currentChat.getChatName());
                                 }
                                 break;
                             case "addable":
-                                if(currentChat==null){
+                                if (currentChat == null) {
                                     System.out.println("Error, no active chat");
                                 } else {
                                     getAddable();
                                 }
                                 break;
-                            default :
+                            default:
                                 System.out.println("Command Unknown");
                                 break;
                         }
-                    } else if (line.charAt(0)== '-'){
+                    } else if (line.charAt(0) == '-') {
                         line = line.substring(1);
                         String[] args = line.split(" ");
-                        if(args.length<1){
+                        if (args.length < 1) {
                             System.out.println("Command Unknown");
                         } else {
-                            switch(args[0]){
+                            switch (args[0]) {
                                 case "create":
-                                    if(args.length<2){
+                                    if (args.length < 2) {
                                         System.out.println("Error, Usage : -create <Chat Name>");
                                     } else {
-                                        args[0]="";
+                                        args[0] = "";
                                         String name = String.join(" ", args);
                                         createChat(name.substring(1));
                                     }
                                     break;
                                 case "leave":
-                                    if(currentChat != null){
-                                        if(Objects.equals(currentChat.getAdmin(), username)){
+                                    if (currentChat != null) {
+                                        if (Objects.equals(currentChat.getAdmin(), username)) {
                                             System.out.println("Error, you can't leave a chat where you are the admin");
-                                        } else if(Objects.equals(currentChat.getAdmin(), "all") && usersConnected.size() == 1){
+                                        } else if (Objects.equals(currentChat.getAdmin(), "all") && usersConnected.size() == 1) {
                                             System.out.println("Error, you can't leave a chat where you are the admin");
                                         } else {
                                             leaveChat(currentChat.getChatName());
@@ -570,8 +575,8 @@ public class HermesClient {
                                     }
                                     break;
                                 case "update":
-                                    if(currentChat!=null){
-                                        if(Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)) {
+                                    if (currentChat != null) {
+                                        if (Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)) {
                                             System.out.println("New name :");
                                             String chatName = stdIn.readLine();
                                             System.out.println("List of admin (all | userName):");
@@ -589,21 +594,21 @@ public class HermesClient {
                                     }
                                     break;
                                 case "add":
-                                    if(currentChat != null && currentUserAddable !=null){
-                                        if(Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)){
-                                            if(args.length!=2){
+                                    if (currentChat != null && currentUserAddable != null) {
+                                        if (Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)) {
+                                            if (args.length != 2) {
                                                 System.out.println("Error, Usage : -add <name1;name2;name3>");
                                             }
-                                            List<String> adds= new ArrayList<String>();
+                                            List<String> adds = new ArrayList<String>();
                                             boolean valid = true;
-                                            for(String user : args[1].split(";")){
-                                                if(currentUserAddable.contains(user)){
+                                            for (String user : args[1].split(";")) {
+                                                if (currentUserAddable.contains(user)) {
                                                     adds.add(user);
                                                 } else {
                                                     valid = false;
                                                 }
                                             }
-                                            if(valid){
+                                            if (valid) {
                                                 addUsers(adds);
                                             } else {
                                                 System.out.println("Error, parse error");
@@ -617,15 +622,15 @@ public class HermesClient {
                                     }
                                     break;
                                 case "ban":
-                                    if(currentChat != null){
-                                        if(Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)){
-                                            if(args.length!=2){
+                                    if (currentChat != null) {
+                                        if (Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)) {
+                                            if (args.length != 2) {
                                                 System.out.println("Error, Usage : -ban <name>");
                                             }
-                                            if(Objects.equals(args[1], username)){
+                                            if (Objects.equals(args[1], username)) {
                                                 System.out.println("Error, you can't ban yourself");
                                             } else {
-                                                if(usersConnected.containsKey(args[1])){
+                                                if (usersConnected.containsKey(args[1])) {
                                                     banUser(args[1]);
                                                 } else {
                                                     System.out.println("Error, user doesn't exist");
@@ -640,16 +645,16 @@ public class HermesClient {
                                     }
                                     break;
                                 case "access":
-                                    args[0]="";
+                                    args[0] = "";
                                     String name = String.join(" ", args);
                                     name = name.substring(1);
                                     boolean valid = false;
-                                    for(LogChat chat :  chats){
-                                        if(chat.getName().equals(name)){
+                                    for (LogChat chat : chats) {
+                                        if (chat.getName().equals(name)) {
                                             valid = true;
                                         }
                                     }
-                                    if(valid){
+                                    if (valid) {
                                         accessChat(name);
                                     } else {
                                         System.out.println("Error, chat doesn't exist");
@@ -666,7 +671,7 @@ public class HermesClient {
                         }
 
                     } else {
-                        if(currentChat != null){
+                        if (currentChat != null) {
                             sendMessage(line, currentChat.getChatName());
                         } else {
                             sendMessage(line, "server");
@@ -682,10 +687,10 @@ public class HermesClient {
 
     private void displayMessage(TextMessage message) {
         System.out.println("Message received :");
-        if(Objects.equals(message.getSender(), username)){
+        if (Objects.equals(message.getSender(), username)) {
             System.out.println("From : me");
         } else {
-            System.out.println("From : "+ message.getSender());
+            System.out.println("From : " + message.getSender());
         }
         System.out.println(message.getContent());
         System.out.println(message.getTime());
@@ -695,14 +700,14 @@ public class HermesClient {
 
     private void displayMessages() {
         System.out.println("*****************");
-        if(currentChat == null){
+        if (currentChat == null) {
             System.out.println("no current chat");
         } else {
-            for(TextMessage textMessage : currentChat.getMessages()) {
-                if(Objects.equals(textMessage.getSender(), username)){
+            for (TextMessage textMessage : currentChat.getMessages()) {
+                if (Objects.equals(textMessage.getSender(), username)) {
                     System.out.println("From : me");
                 } else {
-                    System.out.println("From : "+ textMessage.getSender());
+                    System.out.println("From : " + textMessage.getSender());
                 }
                 System.out.println(textMessage.getContent());
                 System.out.println(textMessage.getTime());
@@ -714,12 +719,12 @@ public class HermesClient {
 
     private void displayNotifications() {
         System.out.println("*****************");
-        for(Notification notification : notifications) {
-            System.out.println("Notifications :" );
+        for (Notification notification : notifications) {
+            System.out.println("Notifications :");
             System.out.println(notification.getContent());
             System.out.println(notification.getTime());
         }
-        if(notifications.size()==0){
+        if (notifications.size() == 0) {
             System.out.println("Notifications list empty");
         }
         System.out.println("*****************");
@@ -727,13 +732,13 @@ public class HermesClient {
 
     private void displayConnected() {
         System.out.println("*****************");
-        if(currentChat == null){
+        if (currentChat == null) {
             System.out.println("no chat");
         } else {
-            System.out.println("Admin : "+ currentChat.getAdmin());
+            System.out.println("Admin : " + currentChat.getAdmin());
             System.out.println("Members : ");
             for (Map.Entry<String, Boolean> mapentry : usersConnected.entrySet()) {
-                System.out.println(mapentry.getKey() +": "+ (mapentry.getValue()?"connected":"disconnected"));
+                System.out.println(mapentry.getKey() + ": " + (mapentry.getValue() ? "connected" : "disconnected"));
             }
         }
         System.out.println("*****************");
@@ -743,15 +748,15 @@ public class HermesClient {
         System.out.println("*****************");
         for (LogChat chat : chats) {
 
-            if(chat.getUsersNumber()==2){
-                System.out.println("Conversation avec " +chat.getOtherName(username));
+            if (chat.getUsersNumber() == 2) {
+                System.out.println("Conversation avec " + chat.getOtherName(username));
             } else {
-                System.out.println("Chat : " +chat.getName());
+                System.out.println("Chat : " + chat.getName());
             }
-            System.out.println(chat.getMessage().getSender() +": "+chat.getMessage().getContent());
+            System.out.println(chat.getMessage().getSender() + ": " + chat.getMessage().getContent());
             System.out.println(chat.getMessage().getTime());
         }
-        if(chats.size()==0){
+        if (chats.size() == 0) {
             System.out.println("Chats list empty");
         }
         System.out.println("*****************");
@@ -798,7 +803,6 @@ public class HermesClient {
     /**
      * Permet de fermet les flux et de terminer la
      * connexion avec le serveur
-     *
      */
     public void closeClient() {
         try {
@@ -809,50 +813,50 @@ public class HermesClient {
     }
 
     public void createChat(@NotNull String chatName) {
-        if(socket != null) {
+        if (socket != null) {
             CreateChat createChat = new CreateChat(this.username, "server", new Date(), chatName);
             outStream.println(gson.toJson(createChat, messageTypeToken.getType()));
         }
     }
 
     public void leaveChat(String chatName) {
-        if(socket != null) {
+        if (socket != null) {
             LeaveChat leaveChat = new LeaveChat(this.username, chatName, new Date(), chatName);
             outStream.println(gson.toJson(leaveChat, messageTypeToken.getType()));
         }
     }
 
     private void updateChat(String chatName, String name, String admin) {
-        if(socket != null) {
+        if (socket != null) {
             UpdateChat updateChat = new UpdateChat(this.username, chatName, new Date(), name, admin);
             outStream.println(gson.toJson(updateChat, messageTypeToken.getType()));
         }
     }
 
     public void getAddable() {
-        if(socket != null) {
+        if (socket != null) {
             GetUsersAddable getUsersAddable = new GetUsersAddable(this.username, currentChat.getChatName(), new Date());
             outStream.println(gson.toJson(getUsersAddable, messageTypeToken.getType()));
         }
     }
 
     public void addUsers(List<String> users) {
-        if(socket != null) {
-            AddUserChat addUserChat = new AddUserChat(this.username,currentChat.getChatName(),new Date(),currentChat.getChatName(),users);
+        if (socket != null) {
+            AddUserChat addUserChat = new AddUserChat(this.username, currentChat.getChatName(), new Date(), currentChat.getChatName(), users);
             outStream.println(gson.toJson(addUserChat, messageTypeToken.getType()));
         }
     }
 
     public void banUser(String userName) {
-        if(socket != null) {
-            BanUserChat banUserChat = new BanUserChat(this.username,currentChat.getChatName(),new Date(),currentChat.getChatName(),userName);
+        if (socket != null) {
+            BanUserChat banUserChat = new BanUserChat(this.username, currentChat.getChatName(), new Date(), currentChat.getChatName(), userName);
             outStream.println(gson.toJson(banUserChat, messageTypeToken.getType()));
         }
     }
 
     private void getUsersAddable() {
-        if(socket != null) {
-            GetUsersAddable getUsersAddable = new GetUsersAddable(this.username,currentChat.getChatName(),new Date());
+        if (socket != null) {
+            GetUsersAddable getUsersAddable = new GetUsersAddable(this.username, currentChat.getChatName(), new Date());
             outStream.println(gson.toJson(getUsersAddable, messageTypeToken.getType()));
         }
     }
@@ -866,7 +870,7 @@ public class HermesClient {
     private void displayAddable() {
         System.out.println("**********************");
         System.out.println("Addable :");
-        for(String user : currentUserAddable){
+        for (String user : currentUserAddable) {
             System.out.println(user);
         }
         System.out.println("**********************");
