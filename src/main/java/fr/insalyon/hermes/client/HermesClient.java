@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import fr.insalyon.hermes.AppState;
 import fr.insalyon.hermes.model.*;
 import fr.insalyon.hermes.serializer.RuntimeTypeAdapterFactory;
+import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -225,8 +226,10 @@ public class HermesClient {
                         //TODO update notification and list chat panel
                         if(!isDesktopAppActive()){
                             displayAlert(addNotification.getContent());
+                        } else {
+                            //Add the new chat in app state (because the user has been added to a new chat)
+                            appState.getChats().add(addNotification.getChat());
                         }
-
                         break;
                     case "BanNotification":
                         BanNotification banNotification = (BanNotification) receivedMessage;
@@ -241,6 +244,11 @@ public class HermesClient {
                                     System.out.println("Chats list is empty");
                                 }
                             }
+                        }
+                        if(isDesktopAppActive()) {
+                            appState.getNotification().setValue(new Pair<>(banNotification.getContent(), true));
+                            //Update the available chats
+                            appState.getChats().removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
                         }
                         if(!isDesktopAppActive()){
                             displayAlert(banNotification.getContent());
@@ -278,6 +286,7 @@ public class HermesClient {
                             if(isDesktopAppActive()) {
                                 appState.getChats().clear();
                                 appState.getCurrentChat().setValue(null);
+                                appState.getMessages().clear();
                             }
                             if(!isDesktopAppActive()){
                                 System.out.println("Chats list is empty");
@@ -311,6 +320,8 @@ public class HermesClient {
                         AlertMessage alertMessage = (AlertMessage) receivedMessage;
                         if(!isDesktopAppActive()) {
                             displayAlert(alertMessage.getContent());
+                        } else {
+                            appState.getNotification().setValue(new Pair<>(alertMessage.getContent(), true));
                         }
                         //TODO display l'alert
                         break;
@@ -404,10 +415,11 @@ public class HermesClient {
                             currentChat.add(textMessage);
                             if(Objects.equals(textMessage.getDestination(), textMessage.getSender())){
                                 String [] content = textMessage.getContent().split(" ");
+                                //Text message that a user has been added
                                 if ("added".equals(content[1])) {
                                     currentChat.setUsers(currentChat.getUsers() + 1);
                                     getUsers(currentChat.getChatName());
-                                } else {
+                                } else { //Text message that a user has been removed
                                     if(isDesktopAppActive()) {
                                         HashMap<String, Boolean> newUsers = new HashMap<>(appState.getUsersConnected().getValue());
                                         newUsers.remove(content[0]);

@@ -25,7 +25,6 @@ import fr.insalyon.hermes.model.LogChat
 import kotlinx.coroutines.launch
 import java.util.*
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
 @Composable
 @Preview
 fun App() {
@@ -34,6 +33,7 @@ fun App() {
 
     DesktopMaterialTheme {
         if (appState.username.value == null) {
+            println("Asking user")
             Row {
                 Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
                     globalAskUsernameDialog(appState)
@@ -45,6 +45,10 @@ fun App() {
             if(appState.hermesClient.value?.isConnected == false) {
                 appState.hermesClient.value?.connect("127.0.0.1", 5000)
                 println("Connected")
+            }
+
+            if (appState.notification.value != null && appState.notification.value?.second == true) {
+                globalNotification(appState)
             }
 
             val askChatName = remember { mutableStateOf(false) }
@@ -102,6 +106,30 @@ fun App() {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun globalNotification(appState: AppState) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = {
+            Text(text = "Notification")
+        },
+        text = {
+            Text(text = appState.notification.value?.first ?: "", Modifier.defaultMinSize())
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    appState.notification.value = (appState.notification.value?.first ?: "") to false
+                }
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {}
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)

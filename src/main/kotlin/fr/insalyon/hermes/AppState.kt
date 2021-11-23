@@ -19,5 +19,6 @@ data class AppState(
     val currentChat: MutableState<AccessChat?> = mutableStateOf(null),
     val messages: SnapshotStateList<TextMessage> = mutableStateListOf(),
     val usersConnected: MutableState<Map<String, Boolean>> = mutableStateOf(mapOf()),
-    val usersAddable: SnapshotStateList<String> = mutableStateListOf()
+    val usersAddable: SnapshotStateList<String> = mutableStateListOf(),
+    val notification: MutableState<Pair<String, Boolean>?> = mutableStateOf(null)
 )
