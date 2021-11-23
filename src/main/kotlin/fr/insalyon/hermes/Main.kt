@@ -22,7 +22,6 @@ import androidx.compose.ui.window.application
 import fr.insalyon.hermes.AppState
 import fr.insalyon.hermes.client.HermesClient
 import fr.insalyon.hermes.model.LogChat
-import fr.insalyon.hermes.model.TextMessage
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -33,65 +32,112 @@ fun App() {
 
     val appState = rememberSaveable { AppState() }
     println(appState.username.value)
-    appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
-    appState.hermesClient.value?.connect("127.0.0.1", 5000)
-    println("Connected")
+
+    val coroutineScope = rememberCoroutineScope()
 
     DesktopMaterialTheme {
-        val askChatName = remember { mutableStateOf(false) }
-        val askAddMember = remember { mutableStateOf(false) }
+        if (appState.username.value == null) {
+            Row {
+                Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+                    globalAskUsernameDialog(appState)
+                }
+            }
+        } else {
+            //Connecting user...
+            appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
+            if(appState.hermesClient.value?.isConnected == false) {
+                appState.hermesClient.value?.connect("127.0.0.1", 5000)
+                println("Connected")
+            }
 
-        globalAskChatDialog(appState, askChatName)
-        globalAddMemberDialog(appState, askAddMember)
+            val askChatName = remember { mutableStateOf(false) }
+            val askAddMember = remember { mutableStateOf(false) }
 
-        Row {
-            //Chats column
-            chatPanel(appState = appState, askChatName)
-            currentChatView(appState = appState, modifier = Modifier.weight(1F))
+            globalAskChatDialog(appState, askChatName)
+            globalAddMemberDialog(appState, askAddMember)
 
-            //Conversation users viewer
-            if(appState.currentChat.value != null) {
-                Column(
-                    Modifier.width(250.dp)
-                        .fillMaxHeight()
-                        .verticalScroll(rememberScrollState())
-                        .background(Color(245, 245, 245))
-                ) {
-                    appState.usersConnected.value.entries.forEach {
-                        ConversationUserRow(
-                            appState = appState,
-                            username = it.key,
-                            connected = it.value,
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-                    }
+            Row {
+                //Chats column
+                chatPanel(appState = appState, askChatName)
+                currentChatView(appState = appState, modifier = Modifier.weight(1F))
 
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedButton(
-                        onClick = {
-                            appState.hermesClient.value?.getAddable()
-                            askAddMember.value = true
-                        },
-                        border = BorderStroke(1.dp, Color.Black),
-                        modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                //Conversation users viewer
+                if (appState.currentChat.value != null) {
+                    Column(
+                        Modifier.width(250.dp)
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState())
+                            .background(Color(245, 245, 245))
                     ) {
-                        Text(text = "Add users", color = Color.Blue)
+                        appState.usersConnected.value.entries.forEach {
+                            ConversationUserRow(
+                                appState = appState,
+                                username = it.key,
+                                connected = it.value,
+                                modifier = Modifier.align(Alignment.Start)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = {
+                                appState.hermesClient.value?.getAddable()
+                                askAddMember.value = true
+                            },
+                            border = BorderStroke(1.dp, Color.Black),
+                            modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                        ) {
+                            Text(text = "Add users", color = Color.Blue)
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = {
+                                appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
+                            },
+                            border = BorderStroke(1.dp, Color.Black),
+                            modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                        ) {
+                            Text(text = "Leave chat", color = Color.Blue)
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedButton(
-                        onClick = {
-                            appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
-                        },
-                        border = BorderStroke(1.dp, Color.Black),
-                        modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
-                    ) {
-                        Text(text = "Leave chat", color = Color.Blue)
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun globalAskUsernameDialog(appState: AppState) {
+
+    var usernameInput by rememberSaveable { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = {},
+        title = {
+            Text(text = "Welcome to Hermes!")
+        },
+        text = {
+            TextField(
+                value = usernameInput,
+                onValueChange = {
+                    usernameInput = it
+                },
+                label = { Text("Choose your username") },
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    appState.username.value = usernameInput
+                }
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {}
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -393,21 +439,23 @@ fun ConversationUserRow(appState: AppState, username: String, connected: Boolean
                 color = if (connected) Color.Green else Color.Red
             )
         }
-        Spacer(modifier = Modifier.width(15.dp))
-        Image(
-            painter = painterResource("x.png"),
-            contentDescription = "Delete user",
-            modifier = Modifier
-                // Set image size to 40 dp
-                .size(15.dp)
-                .align(Alignment.CenterVertically)
-                .clickable {
-                    //Can't self ban
-                    if(username != appState.username.value) {
+
+        //User is admin or everyone is AND can't self ban
+        val admin = appState.currentChat.value?.admin
+        if ((admin.equals(appState.username.value) || admin.equals("all")) && username != appState.username.value) {
+            Spacer(modifier = Modifier.width(15.dp))
+            Image(
+                painter = painterResource("x.png"),
+                contentDescription = "Delete user",
+                modifier = Modifier
+                    // Set image size to 40 dp
+                    .size(15.dp)
+                    .align(Alignment.CenterVertically)
+                    .clickable {
                         appState.hermesClient.value?.banUser(username)
                     }
-                }
-        )
+            )
+        }
     }
 }
 

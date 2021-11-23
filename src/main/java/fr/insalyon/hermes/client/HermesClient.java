@@ -154,12 +154,18 @@ public class HermesClient {
      * @throws IOException
      */
     public void connect(String serverHost, int serverPort) throws IOException {
+        System.out.println("Connecting...");
         socket = new Socket(serverHost, serverPort);
         inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         outStream = new PrintStream(socket.getOutputStream());
         executorService.submit(() -> listenerThread(this, inStream));
         executorService.submit(() -> senderThread(this, outStream));
         sendConnection();
+        isConnected = true;
+    }
+
+    public boolean isConnected() {
+        return isConnected;
     }
 
     public void listenerThread(HermesClient hClient, BufferedReader inStream) {
@@ -263,6 +269,7 @@ public class HermesClient {
                             isLoaded = true; //TODO : update page
                             if(isDesktopAppActive()) {
                                 appState.getChats().clear();
+                                appState.getCurrentChat().setValue(null);
                             }
                             if(!isDesktopAppActive()){
                                 System.out.println("Chats list is empty");
@@ -354,7 +361,7 @@ public class HermesClient {
                             currentChat.setAdmin(updateChat.getAdmin());
                         }
 
-                        if(!isDesktopAppActive()){
+                        if(!isDesktopAppActive()) {
                             System.out.println("Chat updated :");
                             System.out.println(updateChat.getDestination() +" rename to "+updateChat.getChatName());
                             System.out.println("Admin : "+updateChat.getAdmin());

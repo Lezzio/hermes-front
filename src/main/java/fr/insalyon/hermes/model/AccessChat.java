@@ -1,16 +1,13 @@
 package fr.insalyon.hermes.model;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AccessChat extends Message {
+
     private String chatName;
     private int users;
-
-
-
     private List<TextMessage> messages;
     private String admin;
 
@@ -18,13 +15,9 @@ public class AccessChat extends Message {
         this.chatName = chatName;
     }
 
-
-
     public List<TextMessage> getMessages() {
         return messages;
     }
-
-
 
     public AccessChat(String sender, String destination, Date time, String chatName) {
         super(sender, destination, time);
@@ -43,7 +36,9 @@ public class AccessChat extends Message {
         this.users = users;
     }
 
-    public int getUsers() {return this.users;}
+    public int getUsers() {
+        return this.users;
+    }
 
     public void setMessages(List<TextMessage> messages) {
         this.messages = messages;
