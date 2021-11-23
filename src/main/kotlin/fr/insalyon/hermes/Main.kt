@@ -27,8 +27,7 @@ import java.util.*
 
 @Composable
 @Preview
-fun App() {
-    val appState = rememberSaveable { AppState() }
+fun App(appState: AppState) {
     println(appState.username.value)
 
     DesktopMaterialTheme {
@@ -525,7 +524,14 @@ fun MessageCard(msg: Message, modifier: Modifier) {
 }
 
 fun main() = application {
-    Window(onCloseRequest = ::exitApplication) {
-        App()
+
+    val appState = rememberSaveable { AppState() }
+
+    Window(onCloseRequest = {
+        appState.hermesClient.value?.closeClient()
+        exitApplication()
+    }
+    ) {
+        App(appState)
     }
 }

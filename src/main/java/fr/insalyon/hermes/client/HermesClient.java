@@ -206,9 +206,11 @@ public class HermesClient {
                         break;
                     case "AlertDisconnected":
                         AlertDisconnected alertDisconnected = (AlertDisconnected) receivedMessage;
+                        System.out.println("Got alert disconnected");
                         if (Objects.equals(alertDisconnected.getSender(), currentChat.getChatName())) {
                             usersConnected.put(alertDisconnected.getUserDisconnected(), false);
                             if(isDesktopAppActive()) {
+                                System.out.println("Disconnected user : " + alertDisconnected.getUserDisconnected());
                                 Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
                                 appState.getUsersConnected().setValue(newUsersConnected);
                             }
