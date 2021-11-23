@@ -45,8 +45,8 @@ fun App() {
         } else {
             //Connecting user...
             appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
-            if(appState.hermesClient.value?.isConnected == false) {
-                appState.hermesClient.value?.connect("127.0.0.1", 5000)
+            if (appState.hermesClient.value?.isConnected == false) {
+                appState.hermesClient.value?.connect(appState.serverAddress.value, appState.serverPort.value)
                 hermesClient = appState.hermesClient.value
                 println("Connected")
             }
@@ -145,6 +145,8 @@ fun globalNotification(appState: AppState) {
 fun globalAskUsernameDialog(appState: AppState) {
 
     var usernameInput by rememberSaveable { mutableStateOf("") }
+    var serverInput by rememberSaveable { mutableStateOf("") }
+    var serverPortInput by rememberSaveable { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = {},
@@ -152,18 +154,42 @@ fun globalAskUsernameDialog(appState: AppState) {
             Text(text = "Welcome to Hermes!")
         },
         text = {
-            TextField(
-                value = usernameInput,
-                onValueChange = {
-                    usernameInput = it
-                },
-                label = { Text("Choose your username") },
-            )
+            Column {
+                TextField(
+                    value = usernameInput,
+                    onValueChange = {
+                        usernameInput = it
+                    },
+                    label = { Text("Choose your username") },
+                )
+                Spacer(Modifier.height(10.dp))
+                TextField(
+                    value = serverInput,
+                    onValueChange = {
+                        serverInput = it
+                    },
+                    label = { Text("Choose a server address") },
+                )
+                Spacer(Modifier.height(10.dp))
+                TextField(
+                    value = serverPortInput,
+                    onValueChange = {
+                        serverPortInput = it
+                    },
+                    label = { Text("Choose a server port") },
+                )
+            }
         },
         confirmButton = {
             Button(
                 onClick = {
                     appState.username.value = usernameInput
+                    if(serverInput.isNotBlank() && serverInput.isNotEmpty()) {
+                        appState.serverAddress.value = serverInput
+                    }
+                    if(serverPortInput.isNotBlank() && serverPortInput.isNotEmpty()) {
+                        appState.serverPort.value = serverPortInput.toInt()
+                    }
                 }
             ) {
                 Text("Confirm")
