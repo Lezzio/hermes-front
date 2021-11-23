@@ -86,7 +86,7 @@ fun App() {
                         Spacer(modifier = Modifier.height(10.dp))
                         val admin = appState.currentChat.value?.admin
 
-                        if ((admin.equals(appState.username.value) || admin.equals("all")) && appState.username.value != appState.username.value) {
+                        if ((admin.equals(appState.username.value) || admin.equals("all"))) {
                             OutlinedButton(
                                 onClick = {
                                     appState.hermesClient.value?.getAddable()
