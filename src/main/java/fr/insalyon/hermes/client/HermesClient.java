@@ -187,11 +187,15 @@ public class HermesClient {
                                 this.previousConnection = alertConnected.getPreviousConnection();
                             }
                             if(!isDesktopAppActive()){
-                                displayAlert("Connection Sucess");
+                                displayAlert("Connection success");
                             }
                         } else {
                             if (currentChat != null && Objects.equals(alertConnected.getSender(), currentChat.getChatName())) {
                                 usersConnected.put(alertConnected.getUserConnected(), true);
+                                if(isDesktopAppActive()) {
+                                    Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
+                                    appState.getUsersConnected().setValue(newUsersConnected);
+                                }
                                 //TODO: list connected update
                                 if(!isDesktopAppActive()){
                                     displayAlert(alertConnected.getUserConnected()+" connected in the chat");
@@ -203,8 +207,12 @@ public class HermesClient {
                         AlertDisconnected alertDisconnected = (AlertDisconnected) receivedMessage;
                         if (Objects.equals(alertDisconnected.getSender(), currentChat.getChatName())) {
                             usersConnected.put(alertDisconnected.getUserDisconnected(), false);
-                            //TODO: list connected update
+                            if(isDesktopAppActive()) {
+                                Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
+                                appState.getUsersConnected().setValue(newUsersConnected);
+                            }
 
+                            //TODO: list connected update
                             if(!isDesktopAppActive()){
                                 displayAlert(alertDisconnected.getUserDisconnected()+" disconnecting from the chat");
                             }

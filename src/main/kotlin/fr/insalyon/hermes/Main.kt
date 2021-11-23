@@ -29,11 +29,8 @@ import java.util.*
 @Composable
 @Preview
 fun App() {
-
     val appState = rememberSaveable { AppState() }
     println(appState.username.value)
-
-    val coroutineScope = rememberCoroutineScope()
 
     DesktopMaterialTheme {
         if (appState.username.value == null) {
