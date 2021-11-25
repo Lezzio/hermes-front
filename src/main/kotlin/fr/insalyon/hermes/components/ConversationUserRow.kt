@@ -39,14 +39,11 @@ fun ConversationUserRow(appState: AppState, username: String, connected: Boolean
             Text(
                 text = username,
             )
-            // Add a vertical space between the author and message texts
-            Spacer(modifier = Modifier.height(4.dp))
-
             Text(
                 text = if (connected) "Connecté" else "Déconnecté",
                 modifier = Modifier.padding(all = 4.dp),
                 style = MaterialTheme.typography.body2,
-                color = if (connected) Color.Green else Color.Red
+                color = if (connected) Color(101, 200, 122) else Color(236, 90, 70)
             )
         }
 

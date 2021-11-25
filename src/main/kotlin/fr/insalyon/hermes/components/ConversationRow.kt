@@ -11,12 +11,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.insalyon.hermes.model.LogChat
+import java.text.SimpleDateFormat
 
 @Composable
 fun ConversationRow(logChat: LogChat, modifier: Modifier) {
     // Add padding around our message
     Row(
-        modifier = modifier.padding(all = 8.dp),
+        modifier = modifier.padding(all = 8.dp).fillMaxWidth(1F),
 //        horizontalArrangement = if(msg.messageType == MessageType.SELF) androidx.compose.foundation.layout.Arrangement.End else androidx.compose.foundation.layout.Arrangement.Start
     ) {
         Image(
@@ -42,6 +43,12 @@ fun ConversationRow(logChat: LogChat, modifier: Modifier) {
             Text(
                 text = "${logChat.message.sender}: ${logChat.message.content}",
                 modifier = Modifier.padding(all = 4.dp),
+                style = MaterialTheme.typography.body2
+            )
+            val formatter = SimpleDateFormat("MM/dd 'at' HH:mm")
+            Text(
+                text = formatter.format(logChat.message.time),
+                modifier = Modifier.padding(all = 1.dp),
                 style = MaterialTheme.typography.body2
             )
         }

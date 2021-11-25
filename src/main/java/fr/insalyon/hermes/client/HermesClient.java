@@ -1,5 +1,7 @@
 package fr.insalyon.hermes.client;
 
+import androidx.compose.runtime.SnapshotStateKt;
+import androidx.compose.runtime.snapshots.SnapshotStateList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -372,9 +374,9 @@ public class HermesClient {
                         usersConnected = getUsers.getUsersConnected();
                         if (isDesktopAppActive()) {
                             System.out.println("Updating users");
-                            usersConnected.forEach((user, connected) -> {
-                                System.out.println("User = " + user + " connected = " + connected);
-                            });
+//                            usersConnected.forEach((user, connected) -> {
+//                                System.out.println("User = " + user + " connected = " + connected);
+//                            });
                             appState.getUsersConnected().setValue(null);
                             appState.getUsersConnected().setValue(getUsers.getUsersConnected());
                         } else {
@@ -488,7 +490,6 @@ public class HermesClient {
 //                                        appState.getUsersConnected().getValue().remove(content[0]);
                                     }
                                 }
-
                             }
                         }
                         if (currentChat != null && Objects.equals(textMessage.getDestination(), currentChat.getChatName())) {
@@ -515,7 +516,14 @@ public class HermesClient {
                             } else {
                                 appState.getMessages().add(textMessage);
                             }
-
+                        }
+                        if(isDesktopAppActive()) {
+                            //Update the chat's last message
+                            Optional<LogChat> chat = appState.getChats().stream().filter(c -> Objects.equals(c.getName(), textMessage.getDestination())).findFirst();
+                            chat.ifPresent((c) -> c.setMessage(textMessage));
+                            SnapshotStateList<LogChat> snapshotStateList = SnapshotStateKt.mutableStateListOf(appState.getChats().toArray(new LogChat[0]));
+                            appState.getChats().clear();
+                            appState.getChats().addAll(snapshotStateList);
                         }
                         //TODO update order
                         break;

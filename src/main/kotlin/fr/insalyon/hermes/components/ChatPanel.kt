@@ -35,7 +35,9 @@ fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
         }
         Spacer(modifier = Modifier.height(10.dp))
 
-        appState.hermesClient.value?.appState?.chats?.forEach {
+        val chats = appState.chats.toMutableList()
+        chats.sortByDescending { it.message.time }
+        chats.forEach {
             ConversationRow(
                 logChat = it,
                 Modifier.align(Alignment.Start)
