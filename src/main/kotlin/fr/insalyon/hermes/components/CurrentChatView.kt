@@ -98,8 +98,8 @@ fun currentChatView(appState: AppState, modifier: Modifier) {
                     // Clip image to be shaped as a circle
                     .clip(CircleShape)
                     .clickable {
-                        if (msgInput.isNotEmpty() && msgInput.isNotBlank()) {
-                            appState.hermesClient.value?.sendMessage(msgInput, "channel 3")
+                        if (msgInput.isNotEmpty() && msgInput.isNotBlank() && appState.currentChat.value != null) {
+                            appState.hermesClient.value?.sendMessage(msgInput, appState.currentChat.value?.chatName)
                             println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
                             msgInput = ""
                             coroutineScope.launch {

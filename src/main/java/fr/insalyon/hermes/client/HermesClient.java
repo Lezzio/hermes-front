@@ -10,18 +10,14 @@ import fr.insalyon.hermes.model.*;
 import fr.insalyon.hermes.serializer.RuntimeTypeAdapterFactory;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static kotlin.io.ConsoleKt.readLine;
 
 /**
  * This class allows users to interact with other users by connecting to the chat server
