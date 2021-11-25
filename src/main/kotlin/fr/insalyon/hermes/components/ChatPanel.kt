@@ -1,6 +1,5 @@
 package fr.insalyon.hermes.components
 
-import ConversationRow
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ExperimentalMaterialApi
