@@ -19,11 +19,11 @@ import fr.insalyon.hermes.AppState
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun globalAddMemberDialog(appState: AppState, globalAddMemberDialog: MutableState<Boolean>) {
+fun globalAddMemberDialog(appState: AppState, askAddMember: MutableState<Boolean>) {
 
     val selectedUsers = mutableStateListOf<String>()
 
-    if (globalAddMemberDialog.value) {
+    if (askAddMember.value) {
         AlertDialog(
             onDismissRequest = {},
             title = {
@@ -60,7 +60,7 @@ fun globalAddMemberDialog(appState: AppState, globalAddMemberDialog: MutableStat
                     onClick = {
                         appState.hermesClient.value?.addUsers(selectedUsers)
                         selectedUsers.clear()
-                        globalAddMemberDialog.value = false
+                        askAddMember.value = false
                     }
                 ) {
                     Text("Confirm")
@@ -70,7 +70,7 @@ fun globalAddMemberDialog(appState: AppState, globalAddMemberDialog: MutableStat
                 Button(
                     onClick = {
                         selectedUsers.clear()
-                        globalAddMemberDialog.value = false
+                        askAddMember.value = false
                     }
                 ) {
                     Text("Cancel")

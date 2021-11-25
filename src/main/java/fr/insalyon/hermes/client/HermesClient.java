@@ -463,6 +463,11 @@ public class HermesClient {
                             System.out.println(updateChat.getDestination() + " rename to " + updateChat.getChatName());
                             System.out.println("Admin : " + updateChat.getAdmin());
                         }
+
+                        if(isDesktopAppActive()) {
+                            //Get a fresh update of the chats
+                            getChats();
+                        }
                         //TODO updateChat name if needed in currentChat and list chats
                         //TODO update access if admin have changed
                         break;
@@ -994,7 +999,7 @@ public class HermesClient {
      * @param name the new name of the chat
      * @param admin the name of the new admin
      */
-    private void updateChat(String chatName, String name, String admin) {
+    public void updateChat(String chatName, String name, String admin) {
         if (socket != null) {
             UpdateChat updateChat = new UpdateChat(this.username, chatName, new Date(), name, admin);
             outStream.println(gson.toJson(updateChat, messageTypeToken.getType()));

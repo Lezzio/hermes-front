@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import fr.insalyon.hermes.components.ConversationUserRow
 
 @Composable
-fun chatManagePanel(appState: AppState, askAddMember: MutableState<Boolean>) {
+fun chatManagePanel(appState: AppState, askAddMember: MutableState<Boolean>, askChatUpdate: MutableState<Boolean>) {
     if (appState.currentChat.value != null) {
         Column(
             Modifier.width(250.dp)
@@ -46,6 +46,17 @@ fun chatManagePanel(appState: AppState, askAddMember: MutableState<Boolean>) {
                     modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
                 ) {
                     Text(text = "Add users", color = Color.Blue)
+                }
+                OutlinedButton(
+                    onClick = {
+                        println("Clicking on update chat")
+                        appState.hermesClient.value?.getAddable()
+                        askChatUpdate.value = true
+                    },
+                    border = BorderStroke(1.dp, Color.Black),
+                    modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                ) {
+                    Text(text = "Update chat", color = Color.Blue)
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))

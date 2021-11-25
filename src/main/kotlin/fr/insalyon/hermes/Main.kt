@@ -1,35 +1,17 @@
 // Copyright 2000-2021 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 import androidx.compose.desktop.DesktopMaterialTheme
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import fr.insalyon.hermes.AppState
 import fr.insalyon.hermes.chatManagePanel
 import fr.insalyon.hermes.client.HermesClient
 import fr.insalyon.hermes.components.*
-import fr.insalyon.hermes.dialog.globalAddMemberDialog
-import fr.insalyon.hermes.dialog.globalAskChatDialog
-import fr.insalyon.hermes.dialog.globalAskUsernameDialog
-import fr.insalyon.hermes.dialog.globalNotification
-import fr.insalyon.hermes.model.LogChat
-import kotlinx.coroutines.launch
-import java.util.*
+import fr.insalyon.hermes.dialog.*
 
 var hermesClient: HermesClient? = null
 
@@ -73,9 +55,21 @@ fun App() {
 
             val askChatName = remember { mutableStateOf(false) }
             val askAddMember = remember { mutableStateOf(false) }
+            val askChatUpdate = remember { mutableStateOf(false) }
 
-            globalAskChatDialog(appState, askChatName)
-            globalAddMemberDialog(appState, askAddMember)
+            globalAskChatDialog(
+                appState = appState,
+                askChatName = askChatName)
+            globalAddMemberDialog(
+                appState = appState,
+                askAddMember = askAddMember
+            )
+            globalAskChatUpdateDialog(
+                appState = appState,
+                currentChatName = appState.currentChat.value?.chatName,
+                currentChatAdmin = appState.currentChat.value?.admin,
+                askChatUpdate = askChatUpdate
+            )
 
             Row {
                 //Chats column
@@ -83,7 +77,7 @@ fun App() {
                 //Current chat/conversation
                 currentChatView(appState = appState, modifier = Modifier.weight(1F))
                 //Conversation users viewer
-                chatManagePanel(appState = appState, askAddMember = askAddMember)
+                chatManagePanel(appState = appState, askAddMember = askAddMember, askChatUpdate = askChatUpdate)
             }
         }
     }
