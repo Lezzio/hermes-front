@@ -320,6 +320,7 @@ public class HermesClient {
                             usersConnected.forEach((user, connected) -> {
                                 System.out.println("User = " + user + " connected = " + connected);
                             });
+                            appState.getUsersConnected().setValue(null);
                             appState.getUsersConnected().setValue(getUsers.getUsersConnected());
                         } else {
                             displayConnected();

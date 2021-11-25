@@ -66,6 +66,7 @@ fun App() {
                 chatPanel(appState = appState, askChatName)
                 currentChatView(appState = appState, modifier = Modifier.weight(1F))
 
+                println("Rendering all")
                 //Conversation users viewer
                 if (appState.currentChat.value != null) {
                     Column(
@@ -74,7 +75,9 @@ fun App() {
                             .verticalScroll(rememberScrollState())
                             .background(Color(245, 245, 245))
                     ) {
+                        println("Rendering current chat")
                         appState.usersConnected.value.entries.forEach {
+                            println("RENDERING User = ${it.key} connected = ${it.value}")
                             ConversationUserRow(
                                 appState = appState,
                                 username = it.key,
