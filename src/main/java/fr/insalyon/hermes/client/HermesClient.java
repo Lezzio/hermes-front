@@ -481,7 +481,7 @@ public class HermesClient {
                             if (chat.getName().equals(textMessage.getDestination())) {
                                 chat.setTextMessage(textMessage);
 
-                                if (Objects.equals(textMessage.getDestination(), textMessage.getSender())) {
+                                if (Objects.equals(textMessage.getDestination(), textMessage.getSender()) && textMessage.isSpecialEvent()) {
                                     String[] content = textMessage.getContent().split(" ");
                                     if ("added".equals(content[1])) {
                                         chat.addUser(content[0]);
@@ -494,7 +494,7 @@ public class HermesClient {
                         }
                         if (currentChat != null && Objects.equals(textMessage.getDestination(), currentChat.getChatName())) {
                             currentChat.add(textMessage);
-                            if (Objects.equals(textMessage.getDestination(), textMessage.getSender())) {
+                            if (Objects.equals(textMessage.getDestination(), textMessage.getSender()) && textMessage.isSpecialEvent()) {
                                 String[] content = textMessage.getContent().split(" ");
                                 //Text message that a user has been added
                                 if ("added".equals(content[1])) {
