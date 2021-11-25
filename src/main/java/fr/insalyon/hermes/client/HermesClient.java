@@ -22,12 +22,19 @@ import java.util.concurrent.Executors;
 import static kotlin.io.ConsoleKt.readLine;
 
 /**
- * Client permettant l'interaction avec le serveur
+ * This class allows users to interact with other users by connecting to the chat server
  */
 public class HermesClient {
 
+    /**
+     * This attribute allows to know the type of the message received or sent
+     */
     private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {
     };
+
+    /**
+     * Allows to define all types of exchangeable messages
+     */
     private static final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
             .of(Message.class, "type")
             .registerSubtype(GroupMessage.class)
@@ -51,11 +58,18 @@ public class HermesClient {
             .registerSubtype(AlertDisconnected.class)
             .registerSubtype(GetUsers.class);
 
+    /**
+     * Json parser
+     */
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapterFactory(typeFactory)
             .create();
 
+    /**
+     * In our application we consider the user's name as a unique identifier
+     */
     private String username;
+
     /**
      * Socket used to communicate
      * between client and server
@@ -74,7 +88,10 @@ public class HermesClient {
      */
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
-
+    /**
+     * Data of the chat application received from the server
+     * We consider that a chat as it name has an id
+     */
     private List<LogChat> chats;
     private AccessChat currentChat;
     private Map<String, Boolean> usersConnected;
@@ -84,6 +101,10 @@ public class HermesClient {
     private List<String> currentUserAddable;
     private Date previousConnection;
 
+    /**
+     * The application is usable with a desktop and a terminal interface
+     * appState definines the Kotlin front-end interface
+     */
     private final AppState appState;
 
     public AppState getAppState() {
@@ -91,7 +112,9 @@ public class HermesClient {
     }
 
     /**
-     * HermesClient constructor
+     * Constructor that allows to create a client
+     * @param username the username
+     * @param appState the Kotlin front end class for the interface if needed
      */
     public HermesClient(String username, AppState appState) {
         this.username = username;
@@ -106,20 +129,21 @@ public class HermesClient {
         this.appState = appState;
     }
 
+    /**
+     * Allows you to know if you are using the terminal interface or the Kotlin desktop app
+     * @return true if the desktop interface is used
+     */
     public boolean isDesktopAppActive() {
         return appState != null;
     }
 
     /**
-     * @param args 0 => server address 1=> server port 2=> client username
-     * @throws IOException
+     * Allows to launch the application with the terminal interface
+     * @param args
+     * @throws IOException risen if there is a connection error
      */
     public static void main(String[] args) throws IOException {
         System.out.println("launching hermesClient");
-        //if (args.length != 3) {
-        //    System.out.println("Usage: java HermesClient <HermesServer host> <HermesServer port> <HermesClient username>");
-        //    System.exit(1);
-        //}
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Username :");
         String userName = stdIn.readLine();
@@ -148,37 +172,51 @@ public class HermesClient {
 
 
     /**
-     * Permet de connecter le client au serveur Hermes.
-     *
-     * @param serverHost IP du serveur
-     * @param serverPort Port du serveur
-     * @throws IOException
+     * Allows to connect the client to the Hermes server.
+     * @param serverHost server IP
+     * @param serverPort server Port
+     * @throws IOException risen if the server is disconnected
      */
     public void connect(String serverHost, int serverPort) throws IOException {
         System.out.println("Connecting...");
         socket = new Socket(serverHost, serverPort);
         inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         outStream = new PrintStream(socket.getOutputStream());
-        executorService.submit(() -> listenerThread(this, inStream));
-        executorService.submit(() -> senderThread(this, outStream));
+        executorService.submit(() -> listenerThread( inStream));
+        executorService.submit(() -> senderThread());
         sendConnection();
         isConnected = true;
     }
 
+    /**
+     * Allows to know if the client is connected on the server
+     * @return true if the client is connected
+     */
     public boolean isConnected() {
         return isConnected;
     }
 
-    public void listenerThread(HermesClient hClient, BufferedReader inStream) {
+    /**
+     * Allows interpreting messages received by the client that have been sent by the server
+     * Allows to recover the different data received and to assign the appropriate
+     * application processing to make them interpretable by the user of the application
+     * The data will be stored in the various attributes provided for this purpose of the
+     * current HermesClient
+     * @param inStream the in stream of the client
+     */
+    public void listenerThread(BufferedReader inStream) {
         try {
             String message;
+            //the string message detect in the in stream
             while ((message = inStream.readLine()) != null) {
+
+                //Thanks to messageTypeToken we can serialize the string as a message by convert it in json
                 Message receivedMessage = gson.fromJson(message, messageTypeToken.getType());
 
-                //System.out.println("Message = " + message);
-                //System.out.println("Deserialized = " + receivedMessage + " name = " + receivedMessage.getClass().getSimpleName());
-
+                //Difference in treatment depending on the message received
                 switch (receivedMessage.getClass().getSimpleName()) {
+
+                    //This alert confirms a connection on the server of the client or another user
                     case "AlertConnected":
                         AlertConnected alertConnected = (AlertConnected) receivedMessage;
                         if (Objects.equals(alertConnected.getUserConnected(), username) && Objects.equals(alertConnected.getSender(), "server")) {
@@ -204,6 +242,8 @@ public class HermesClient {
                             }
                         }
                         break;
+
+                    //This alert confirms the deconnection on the server of a user
                     case "AlertDisconnected":
                         AlertDisconnected alertDisconnected = (AlertDisconnected) receivedMessage;
                         System.out.println("Got alert disconnected");
@@ -221,6 +261,8 @@ public class HermesClient {
                             }
                         }
                         break;
+
+                    //Notification received when the current client has been added to a new chat
                     case "AddNotification":
                         AddNotification addNotification = (AddNotification) receivedMessage;
                         notifications.add(addNotification);
@@ -233,6 +275,8 @@ public class HermesClient {
                             appState.getChats().add(addNotification.getChat());
                         }
                         break;
+
+                    //Notification received when the current client has been banned from a chat by the admin
                     case "BanNotification":
                         BanNotification banNotification = (BanNotification) receivedMessage;
                         notifications.add(banNotification);
@@ -256,11 +300,15 @@ public class HermesClient {
                             displayAlert(banNotification.getContent());
                         }
                         break;
+
+                    //Gives the history of notifications
                     case "GetNotifications":
                         GetNotifications getNotifications = (GetNotifications) receivedMessage;
                         this.notifications = getNotifications.getNotifications();
                         //todo update
                         break;
+
+                    //Gives the list of users that can be added to the current chat
                     case "GetUsersAddable":
                         GetUsersAddable getUsersAddable = (GetUsersAddable) receivedMessage;
                         currentUserAddable = getUsersAddable.getUsers();
@@ -272,6 +320,8 @@ public class HermesClient {
                             appState.getUsersAddable().addAll(currentUserAddable);
                         }
                         break;
+
+                    //Gives a list of the client's chats
                     case "GetChats":
                         GetChats getChats = (GetChats) receivedMessage;
                         chats = getChats.getChats();
@@ -295,6 +345,8 @@ public class HermesClient {
                             }
                         }
                         break;
+
+                    //List the message history of a specific client's chat
                     case "AccessChat":
                         currentChat = (AccessChat) receivedMessage;
                         getUsers(currentChat.getChatName());
@@ -307,6 +359,8 @@ public class HermesClient {
                             displayMessages();
                         }
                         break;
+
+                    //Gives the list of clients belonging to a chat with their connection status
                     case "GetUsers":
                         GetUsers getUsers = (GetUsers) receivedMessage;
                         isLoaded = true;
@@ -318,6 +372,8 @@ public class HermesClient {
                         }
                         //TODO : update page
                         break;
+
+                    //Received when the server send an alert
                     case "AlertMessage":
                         AlertMessage alertMessage = (AlertMessage) receivedMessage;
                         if(!isDesktopAppActive()) {
@@ -327,6 +383,8 @@ public class HermesClient {
                         }
                         //TODO display l'alert
                         break;
+
+                    //Gives the result of a chat creation request
                     case "CreateChat":
                         CreateChat createChat = (CreateChat) receivedMessage;
                         if (createChat.getState()) {
@@ -349,11 +407,15 @@ public class HermesClient {
                             //TODO: display alert
                         }
                         break;
+
+                    //Disconnection
                     case "DisconnectionMessage":
                         DisconnectionMessage disconnectionMessage = (DisconnectionMessage) receivedMessage;
                         this.isConnected = false;
                         //TODO deco and delete this user
                         break;
+
+                    //Gives the result when the user want to leave a chat
                     case "LeaveChat":
                         LeaveChat leaveChat = (LeaveChat) receivedMessage;
                         if(!isDesktopAppActive()){
@@ -362,6 +424,8 @@ public class HermesClient {
                         //Update the chats
                         getChats();
                         break;
+
+                    //Gives the result when a chat has been updated
                     case "UpdateChat":
                         UpdateChat updateChat = (UpdateChat) receivedMessage;
                         boolean nameChanged = false;
@@ -390,6 +454,10 @@ public class HermesClient {
                         //TODO updateChat name if needed in currentChat and list chats
                         //TODO update access if admin have changed
                         break;
+
+                    //Simple TextMessage receeived in a chat
+                    //The textMessage can be a message send by another client or send by the chat itself in order
+                    //to inform clients of the chat of a specific event
                     case "TextMessage":
                         TextMessage textMessage = (TextMessage) receivedMessage;
 
@@ -450,11 +518,15 @@ public class HermesClient {
 
             }
         } catch (Exception e) {
+            //When the client asks for disconnection the socket is close
+            //The threat must stop
             if(Objects.equals(e.getMessage(), "Socket closed")){
                 if(!isDesktopAppActive()){
                     System.out.println("Disconnected");
                     System.exit(0);
                 }
+
+            //If the server crash
             } else if(Objects.equals(e.getMessage(), "Connection reset")){
                 closeClient();
                 if(!isDesktopAppActive()){
@@ -468,9 +540,11 @@ public class HermesClient {
 
     }
 
-
-
-
+    /**
+     * Allows to ask the server the list of chat users
+     * The name of the chat is defined in parameter
+     * @param chatName the chat name
+     */
     private void getUsers(String chatName) {
         if (socket != null) {
             GetUsers getUsers = new GetUsers(this.username, chatName, new Date(System.currentTimeMillis()));
@@ -478,6 +552,11 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows asking the server to access a chat
+     * Access a chat mean get the history of all past messages
+     * @param name the chat name
+     */
     public void accessChat(String name) {
         if (socket != null) {
             isLoaded = false;
@@ -486,6 +565,9 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows asking the server the list of chats of the current client
+     */
     private void getChats() {
         if (socket != null) {
             GetChats getChats = new GetChats(this.username, "server", new Date(System.currentTimeMillis()));
@@ -493,6 +575,9 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows asking the server the list of past notifications of the current client
+     */
     private void getNotifications() {
         if(socket != null) {
             GetNotifications getNotifications = new GetNotifications(this.username, "server", new Date(System.currentTimeMillis()));
@@ -500,28 +585,45 @@ public class HermesClient {
         }
     }
 
-    public void senderThread(HermesClient hClient, PrintStream outStream) {
+    /**
+     * Allows you to send different types of events to the server
+     * depending on the user's interaction with the application and its purpose
+     * Allows displaying data by the user in the terminal
+     * This thread is only used with the terminal interface by reading the System.in messages
+     */
+    public void senderThread() {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         String line;
         try {
             while (true) {
+                //Read the line write by the user
                 line = stdIn.readLine();
                 if (line != null) {
+                    //Request for information
                     if(line.charAt(0) == '?'){
                         line = line.substring(1);
                         switch(line){
+                            //Asks for the list of chats
                             case "chats":
                                 displayChats();
                                 break;
+
+                            //Asks for the list of users connected in the current chat
                             case "connected":
                                 displayConnected();
                                 break;
+
+                            //Asks for the list of notifications
                             case "notifications":
                                 displayNotifications();
                                 break;
+
+                            //Asks for the list of messages in the current chat
                             case "messages":
                                 displayMessages();
                                 break;
+
+                            //Asks for the current position -> a specific chat, the menu
                             case "position":
                                 if(currentChat==null){
                                     System.out.println("Main Menu");
@@ -529,6 +631,8 @@ public class HermesClient {
                                     System.out.println(currentChat.getChatName());
                                 }
                                 break;
+
+                            //Asks to get all users addable in a specific chat
                             case "addable":
                                 if(currentChat==null){
                                     System.out.println("Error, no active chat");
@@ -540,6 +644,8 @@ public class HermesClient {
                                 System.out.println("Command Unknown");
                                 break;
                         }
+
+                    //Request for special event
                     } else if (line.charAt(0)== '-'){
                         line = line.substring(1);
                         String[] args = line.split(" ");
@@ -547,6 +653,7 @@ public class HermesClient {
                             System.out.println("Command Unknown");
                         } else {
                             switch(args[0]){
+                                //Asks for created a new chat
                                 case "create":
                                     if(args.length<2){
                                         System.out.println("Error, Usage : -create <Chat Name>");
@@ -556,6 +663,8 @@ public class HermesClient {
                                         createChat(name.substring(1));
                                     }
                                     break;
+
+                                //Asks for leaving a chat
                                 case "leave":
                                     if(currentChat != null){
                                         if(Objects.equals(currentChat.getAdmin(), username)){
@@ -569,6 +678,8 @@ public class HermesClient {
                                         System.out.println("Error, no active chat");
                                     }
                                     break;
+
+                                //Asks for updating a chat
                                 case "update":
                                     if(currentChat!=null){
                                         if(Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)) {
@@ -588,6 +699,8 @@ public class HermesClient {
                                         System.out.println("Error, no active chat");
                                     }
                                     break;
+
+                                //Asks for adding users to a chat
                                 case "add":
                                     if(currentChat != null && currentUserAddable !=null){
                                         if(Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)){
@@ -616,6 +729,8 @@ public class HermesClient {
                                         System.out.println("Error, no active chat");
                                     }
                                     break;
+
+                                //Asks for banning a user from a chat
                                 case "ban":
                                     if(currentChat != null){
                                         if(Objects.equals(currentChat.getAdmin(), "all") || Objects.equals(currentChat.getAdmin(), username)){
@@ -639,6 +754,8 @@ public class HermesClient {
                                         System.out.println("Error, no active chat");
                                     }
                                     break;
+
+                                //Asks to access a chat
                                 case "access":
                                     args[0]="";
                                     String name = String.join(" ", args);
@@ -655,6 +772,8 @@ public class HermesClient {
                                         System.out.println("Error, chat doesn't exist");
                                     }
                                     break;
+
+                                //Asks to exit the application
                                 case "exit":
                                     sendDisconnection();
                                     closeClient();
@@ -666,6 +785,7 @@ public class HermesClient {
                         }
 
                     } else {
+                        //Sends a simple text message
                         if(currentChat != null){
                             sendMessage(line, currentChat.getChatName());
                         } else {
@@ -680,6 +800,10 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to display a TextMessage in the terminal
+     * @param message the message to display
+     */
     private void displayMessage(TextMessage message) {
         System.out.println("Message received :");
         if(Objects.equals(message.getSender(), username)){
@@ -692,7 +816,9 @@ public class HermesClient {
         System.out.println(" ");
     }
 
-
+    /**
+     * Allows to display the messages of the current chat in the terminal
+     */
     private void displayMessages() {
         System.out.println("*****************");
         if(currentChat == null){
@@ -712,6 +838,9 @@ public class HermesClient {
         System.out.println("*****************");
     }
 
+    /**
+     * Allows to display the notifications in the terminal
+     */
     private void displayNotifications() {
         System.out.println("*****************");
         for(Notification notification : notifications) {
@@ -725,6 +854,9 @@ public class HermesClient {
         System.out.println("*****************");
     }
 
+    /**
+     * Allows to display the users connected in a chat
+     */
     private void displayConnected() {
         System.out.println("*****************");
         if(currentChat == null){
@@ -739,6 +871,9 @@ public class HermesClient {
         System.out.println("*****************");
     }
 
+    /**
+     * Allows to display the client chats
+     */
     private void displayChats() {
         System.out.println("*****************");
         for (LogChat chat : chats) {
@@ -758,10 +893,10 @@ public class HermesClient {
     }
 
     /**
+     * Used to DEBUG
      * Event triggered on message received
      * Used in the listening thread
-     *
-     * @param message
+     * @param message the message received
      */
     public void messageReceived(String message) {
         System.out.println("showing message" + message);
@@ -772,7 +907,8 @@ public class HermesClient {
      * Wraps the content of the message with other
      * informations
      *
-     * @param message
+     * @param message the message that we want to send
+     * @param chatDestination the destination of the message
      */
     public void sendMessage(String message, String chatDestination) {
         if (socket != null) {
@@ -781,6 +917,9 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to send a connection message to the server
+     */
     public void sendConnection() {
         if (socket != null) {
             ConnectionMessage msg = new ConnectionMessage(this.username, "", new Date(System.currentTimeMillis()));
@@ -788,6 +927,9 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to send a disconnection message to the server
+     */
     public void sendDisconnection() {
         if (socket != null) {
             DisconnectionMessage msg = new DisconnectionMessage(this.username, new Date());
@@ -796,8 +938,8 @@ public class HermesClient {
     }
 
     /**
-     * Permet de fermet les flux et de terminer la
-     * connexion avec le serveur
+     * Allows you to close streams and terminate the
+     * connection with the server
      *
      */
     public void closeClient() {
@@ -808,6 +950,10 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to ask the server to create a chat
+     * @param chatName the name of the chat that the client want to create
+     */
     public void createChat(@NotNull String chatName) {
         if(socket != null) {
             CreateChat createChat = new CreateChat(this.username, "server", new Date(), chatName);
@@ -815,6 +961,10 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to ask the server to leave a chat
+     * @param chatName the name of the chat that the client want to leave
+     */
     public void leaveChat(String chatName) {
         if(socket != null) {
             LeaveChat leaveChat = new LeaveChat(this.username, chatName, new Date(), chatName);
@@ -822,6 +972,12 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to ask the server to update a chat
+     * @param chatName the chat name that we want to update
+     * @param name the new name of the chat
+     * @param admin the name of the new admin
+     */
     private void updateChat(String chatName, String name, String admin) {
         if(socket != null) {
             UpdateChat updateChat = new UpdateChat(this.username, chatName, new Date(), name, admin);
@@ -829,6 +985,9 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to ask the server to get the users addable in the current chat
+     */
     public void getAddable() {
         if(socket != null) {
             GetUsersAddable getUsersAddable = new GetUsersAddable(this.username, currentChat.getChatName(), new Date());
@@ -836,6 +995,10 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to ask the server to add a list of user in the current chat
+     * @param users the list of users
+     */
     public void addUsers(List<String> users) {
         if(socket != null) {
             AddUserChat addUserChat = new AddUserChat(this.username,currentChat.getChatName(),new Date(),currentChat.getChatName(),users);
@@ -843,6 +1006,10 @@ public class HermesClient {
         }
     }
 
+    /**
+     * Allows to ask the server to ban a user from the current chat
+     * @param userName the user to ban
+     */
     public void banUser(String userName) {
         if(socket != null) {
             BanUserChat banUserChat = new BanUserChat(this.username,currentChat.getChatName(),new Date(),currentChat.getChatName(),userName);
@@ -850,19 +1017,19 @@ public class HermesClient {
         }
     }
 
-    private void getUsersAddable() {
-        if(socket != null) {
-            GetUsersAddable getUsersAddable = new GetUsersAddable(this.username,currentChat.getChatName(),new Date());
-            outStream.println(gson.toJson(getUsersAddable, messageTypeToken.getType()));
-        }
-    }
-
+    /**
+     * Allows to display an alert in the terminal
+     * @param msg the alert
+     */
     private void displayAlert(String msg) {
         System.out.println("********Alert*********");
         System.out.println(msg);
         System.out.println("**********************");
     }
 
+    /**
+     * Allows to display the list of addable user in the terminal
+     */
     private void displayAddable() {
         System.out.println("**********************");
         System.out.println("Addable :");
