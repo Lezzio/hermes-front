@@ -24,17 +24,18 @@ fun chatManagePanel(appState: AppState, askAddMember: MutableState<Boolean>, ask
                 .verticalScroll(rememberScrollState())
                 .background(Color(245, 245, 245))
         ) {
+            val admin = appState.currentChat.value?.admin
+
             appState.usersConnected.value.entries.forEach {
                 ConversationUserRow(
                     appState = appState,
-                    username = it.key,
+                    username = "${it.key} ${if(it.key == admin) " (admin)" else ""}",
                     connected = it.value,
                     modifier = Modifier.align(Alignment.Start)
                 )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            val admin = appState.currentChat.value?.admin
 
             if ((admin.equals(appState.username.value) || admin.equals("all"))) {
                 OutlinedButton(
@@ -60,16 +61,19 @@ fun chatManagePanel(appState: AppState, askAddMember: MutableState<Boolean>, ask
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            OutlinedButton(
-                onClick = {
-                    appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
-                },
-                border = BorderStroke(1.dp, Color.Black),
-                modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
-            ) {
-                Text(text = "Leave chat", color = Color.Blue)
+            //You can only leave if you're not the admin
+            if (admin == appState.username.value) {
+                OutlinedButton(
+                    onClick = {
+                        appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
+                    },
+                    border = BorderStroke(1.dp, Color.Black),
+                    modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                ) {
+                    Text(text = "Leave chat", color = Color.Blue)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
             }
-            Spacer(modifier = Modifier.height(10.dp))
         }
     }
 }

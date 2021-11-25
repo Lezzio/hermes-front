@@ -1,6 +1,7 @@
 package fr.insalyon.hermes.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
@@ -8,16 +9,20 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.insalyon.hermes.model.LogChat
 import java.text.SimpleDateFormat
 
 @Composable
-fun ConversationRow(logChat: LogChat, modifier: Modifier) {
+fun ConversationRow(activeChat: Boolean, logChat: LogChat, modifier: Modifier) {
     // Add padding around our message
+    val chatColor = if(activeChat) Color(189, 211, 255) else Color.White
     Row(
-        modifier = modifier.padding(all = 8.dp).fillMaxWidth(1F),
+        modifier = modifier.background(chatColor)
+            .padding(all = 8.dp)
+            .fillMaxWidth(1F),
 //        horizontalArrangement = if(msg.messageType == MessageType.SELF) androidx.compose.foundation.layout.Arrangement.End else androidx.compose.foundation.layout.Arrangement.Start
     ) {
         Image(

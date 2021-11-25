@@ -39,8 +39,9 @@ fun chatPanel(appState: AppState, askChatName: MutableState<Boolean>) {
         chats.sortByDescending { it.message.time }
         chats.forEach {
             ConversationRow(
+                activeChat = appState.currentChat.value?.chatName == it.name,
                 logChat = it,
-                Modifier.align(Alignment.Start)
+                modifier = Modifier.align(Alignment.Start)
                     .clickable {
                         println("Access chat")
                         appState.hermesClient.value?.accessChat(it.name)

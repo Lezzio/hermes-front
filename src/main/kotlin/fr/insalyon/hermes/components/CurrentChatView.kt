@@ -75,7 +75,7 @@ fun currentChatView(appState: AppState, modifier: Modifier) {
                 modifier = Modifier
                     .weight(1F)
                     .onPreviewKeyEvent {
-                        if (it.key == Key.Enter && msgInput.isNotEmpty() && msgInput.isNotBlank()) {
+                        if (it.key == Key.Enter && msgInput.isNotEmpty() && msgInput.isNotBlank() && appState.currentChat.value != null) {
                             appState.hermesClient.value?.sendMessage(msgInput, appState.currentChat.value?.chatName)
                             println("Clicked to send $msgInput to ${appState.currentChat.value?.chatName}}")
                             msgInput = ""
