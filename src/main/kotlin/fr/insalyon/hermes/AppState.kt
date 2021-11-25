@@ -14,6 +14,8 @@ import fr.insalyon.hermes.model.TextMessage
 
 data class AppState(
     val username: MutableState<String?> = mutableStateOf(null),
+    val serverAddress: MutableState<String> = mutableStateOf("127.0.0.1"),
+    val serverPort: MutableState<Int> = mutableStateOf(5000),
     val hermesClient: MutableState<HermesClient?> = mutableStateOf(null),
     val chats: SnapshotStateList<LogChat> = mutableStateListOf(),
     val currentChat: MutableState<AccessChat?> = mutableStateOf(null),

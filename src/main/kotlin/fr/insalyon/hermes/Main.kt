@@ -25,12 +25,16 @@ import fr.insalyon.hermes.model.LogChat
 import kotlinx.coroutines.launch
 import java.util.*
 
+var hermesClient: HermesClient? = null
+
 @Composable
 @Preview
-fun App(appState: AppState) {
-    println(appState.username.value)
+fun App() {
 
     DesktopMaterialTheme {
+
+        val appState = rememberSaveable { AppState() }
+
         if (appState.username.value == null) {
             println("Asking user")
             Row {
@@ -41,8 +45,9 @@ fun App(appState: AppState) {
         } else {
             //Connecting user...
             appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
-            if(appState.hermesClient.value?.isConnected == false) {
-                appState.hermesClient.value?.connect("127.0.0.1", 5000)
+            if (appState.hermesClient.value?.isConnected == false) {
+                appState.hermesClient.value?.connect(appState.serverAddress.value, appState.serverPort.value)
+                hermesClient = appState.hermesClient.value
                 println("Connected")
             }
 
@@ -61,6 +66,7 @@ fun App(appState: AppState) {
                 chatPanel(appState = appState, askChatName)
                 currentChatView(appState = appState, modifier = Modifier.weight(1F))
 
+                println("Rendering all")
                 //Conversation users viewer
                 if (appState.currentChat.value != null) {
                     Column(
@@ -69,7 +75,9 @@ fun App(appState: AppState) {
                             .verticalScroll(rememberScrollState())
                             .background(Color(245, 245, 245))
                     ) {
+                        println("Rendering current chat")
                         appState.usersConnected.value.entries.forEach {
+                            println("RENDERING User = ${it.key} connected = ${it.value}")
                             ConversationUserRow(
                                 appState = appState,
                                 username = it.key,
@@ -79,15 +87,19 @@ fun App(appState: AppState) {
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedButton(
-                            onClick = {
-                                appState.hermesClient.value?.getAddable()
-                                askAddMember.value = true
-                            },
-                            border = BorderStroke(1.dp, Color.Black),
-                            modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
-                        ) {
-                            Text(text = "Add users", color = Color.Blue)
+                        val admin = appState.currentChat.value?.admin
+
+                        if ((admin.equals(appState.username.value) || admin.equals("all"))) {
+                            OutlinedButton(
+                                onClick = {
+                                    appState.hermesClient.value?.getAddable()
+                                    askAddMember.value = true
+                                },
+                                border = BorderStroke(1.dp, Color.Black),
+                                modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+                            ) {
+                                Text(text = "Add users", color = Color.Blue)
+                            }
                         }
                         Spacer(modifier = Modifier.height(10.dp))
                         OutlinedButton(
@@ -136,6 +148,8 @@ fun globalNotification(appState: AppState) {
 fun globalAskUsernameDialog(appState: AppState) {
 
     var usernameInput by rememberSaveable { mutableStateOf("") }
+    var serverInput by rememberSaveable { mutableStateOf("") }
+    var serverPortInput by rememberSaveable { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = {},
@@ -143,18 +157,42 @@ fun globalAskUsernameDialog(appState: AppState) {
             Text(text = "Welcome to Hermes!")
         },
         text = {
-            TextField(
-                value = usernameInput,
-                onValueChange = {
-                    usernameInput = it
-                },
-                label = { Text("Choose your username") },
-            )
+            Column {
+                TextField(
+                    value = usernameInput,
+                    onValueChange = {
+                        usernameInput = it
+                    },
+                    label = { Text("Choose your username") },
+                )
+                Spacer(Modifier.height(10.dp))
+                TextField(
+                    value = serverInput,
+                    onValueChange = {
+                        serverInput = it
+                    },
+                    label = { Text("Choose a server address") },
+                )
+                Spacer(Modifier.height(10.dp))
+                TextField(
+                    value = serverPortInput,
+                    onValueChange = {
+                        serverPortInput = it
+                    },
+                    label = { Text("Choose a server port") },
+                )
+            }
         },
         confirmButton = {
             Button(
                 onClick = {
                     appState.username.value = usernameInput
+                    if(serverInput.isNotBlank() && serverInput.isNotEmpty()) {
+                        appState.serverAddress.value = serverInput
+                    }
+                    if(serverPortInput.isNotBlank() && serverPortInput.isNotEmpty()) {
+                        appState.serverPort.value = serverPortInput.toInt()
+                    }
                 }
             ) {
                 Text("Confirm")
@@ -314,7 +352,7 @@ fun currentChatView(appState: AppState, modifier: Modifier) {
     val scrollState = rememberScrollState(Int.MAX_VALUE)
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(scrollState) {
+    LaunchedEffect(appState.messages.size) {
         scrollState.animateScrollTo(Int.MAX_VALUE)
     }
 
@@ -525,13 +563,11 @@ fun MessageCard(msg: Message, modifier: Modifier) {
 
 fun main() = application {
 
-    val appState = rememberSaveable { AppState() }
-
     Window(onCloseRequest = {
-        appState.hermesClient.value?.closeClient()
+        hermesClient?.closeClient()
         exitApplication()
     }
     ) {
-        App(appState)
+        App()
     }
 }
