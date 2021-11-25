@@ -38,13 +38,26 @@ fun currentChatView(appState: AppState, modifier: Modifier) {
             Modifier.fillMaxWidth().verticalScroll(scrollState).weight(1F).background(Color.White)
         ) {
             appState.messages.forEach {
+                val messageType = if (it.sender == appState.username.value) {
+                    MessageType.SELF
+                } else if (it.sender == appState.currentChat.value?.chatName && it.destination == appState.currentChat.value?.chatName) {
+                    MessageType.SYSTEM
+                } else {
+                    MessageType.OTHER
+                }
                 MessageCard(
                     msg = Message(
                         author = it.sender,
                         body = it.content,
-                        if (it.sender == appState.username.value) MessageType.SELF else MessageType.OTHER
+                        messageType = messageType
                     ),
-                    modifier = Modifier.align(if (it.sender == appState.username.value) Alignment.End else Alignment.Start)
+                    modifier = Modifier.align(
+                        alignment = when (messageType) {
+                            MessageType.SELF -> Alignment.End
+                            MessageType.OTHER -> Alignment.Start
+                            else -> Alignment.CenterHorizontally
+                        }
+                    )
                 )
             }
         }
