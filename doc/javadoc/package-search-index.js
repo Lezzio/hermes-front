@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"fr.insalyon.hermes.client"},{"l":"fr.insalyon.hermes.model"},{"l":"fr.insalyon.hermes.serializer"}]
