@@ -29,8 +29,9 @@ fun chatManagePanel(appState: AppState, askAddMember: MutableState<Boolean>, ask
             appState.usersConnected.value.entries.forEach {
                 ConversationUserRow(
                     appState = appState,
-                    username = "${it.key} ${if(it.key == admin) " (admin)" else ""}",
+                    username = it.key,
                     connected = it.value,
+                    adminUser = it.key == admin,
                     modifier = Modifier.align(Alignment.Start)
                 )
             }

@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import fr.insalyon.hermes.AppState
 
 @Composable
-fun ConversationUserRow(appState: AppState, username: String, connected: Boolean, modifier: Modifier) {
+fun ConversationUserRow(appState: AppState, username: String, connected: Boolean, adminUser: Boolean, modifier: Modifier) {
     // Add padding around our message
     Row(
         modifier = modifier.padding(all = 8.dp),
@@ -37,7 +37,7 @@ fun ConversationUserRow(appState: AppState, username: String, connected: Boolean
 
         Column {
             Text(
-                text = username,
+                text = "$username ${if(adminUser) "(admin)" else ""}",
             )
             Text(
                 text = if (connected) "Connecté" else "Déconnecté",
