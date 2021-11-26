@@ -62,7 +62,7 @@ fun chatManagePanel(appState: AppState, askAddMember: MutableState<Boolean>, ask
             }
             Spacer(modifier = Modifier.height(10.dp))
             //You can only leave if you're not the admin
-            if (admin == appState.username.value) {
+            if (admin != appState.username.value) {
                 OutlinedButton(
                     onClick = {
                         appState.hermesClient.value?.leaveChat(appState.currentChat.value?.chatName)
