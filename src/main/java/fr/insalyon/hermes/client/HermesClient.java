@@ -284,7 +284,7 @@ public class HermesClient {
                         notifications.add(banNotification);
                         chats.removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
                         //TODO update notification and list chat panel
-                        if (Objects.equals(currentChat.getChatName(), banNotification.getSender())) {
+                        if (currentChat!= null && Objects.equals(currentChat.getChatName(), banNotification.getSender())) {
                             if (chats.size() > 0) {
                                 accessChat(chats.get(0).getName());
                             } else {
