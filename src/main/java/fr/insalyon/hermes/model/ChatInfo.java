@@ -2,6 +2,10 @@ package fr.insalyon.hermes.model;
 
 import java.util.List;
 
+
+/**
+ * Allows to create a chat info class
+ */
 public class ChatInfo {
 
     private String name;

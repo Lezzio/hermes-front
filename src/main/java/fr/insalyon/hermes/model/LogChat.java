@@ -3,6 +3,9 @@ package fr.insalyon.hermes.model;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class is used to define a chat in general
+ */
 public class LogChat {
     private String name;
     private List<String> users;

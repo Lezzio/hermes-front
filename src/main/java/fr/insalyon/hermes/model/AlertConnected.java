@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+/**
+ * Message used to alert that someone is connected in the chat application
+ */
 public class AlertConnected extends Message {
     private final String userConnected;
     private Date previousConnection;

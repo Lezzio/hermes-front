@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.List;
 
+/**
+ * Allows to create a chat that will be exchange in a message
+ */
 public class Chat {
     private String admin;
     private String chatName;

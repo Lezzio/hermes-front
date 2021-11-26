@@ -2,6 +2,10 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+
+/**
+ * Message used to exchange banned notifications
+ */
 public class BanNotification extends Notification{
 
 

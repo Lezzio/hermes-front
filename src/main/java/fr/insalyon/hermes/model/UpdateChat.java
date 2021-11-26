@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+/**
+ * Message used to try tu update the parameters of a chat
+ */
 public class UpdateChat extends Message {
 
     private String chatName;

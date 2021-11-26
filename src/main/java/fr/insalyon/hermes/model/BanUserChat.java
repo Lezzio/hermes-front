@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+/**
+ * Message used to exchange ban requets
+ */
 public class BanUserChat extends Message {
     private String chatName;
     private String userName;

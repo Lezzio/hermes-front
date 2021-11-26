@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+/**
+ * Message used to alert that someone is disconnected from the application
+ */
 public class AlertDisconnected extends Message {
     private final String userDisconnected;
 

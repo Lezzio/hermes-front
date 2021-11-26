@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Message used to get the list of chats of a user
+ */
 public class GetChats extends Message {
     private List<LogChat> logChats;
 

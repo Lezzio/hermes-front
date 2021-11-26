@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+/**
+ * Allows to inform the server of a connection
+ */
 public class ConnectionMessage extends Message {
     private String password;
     private String userName;

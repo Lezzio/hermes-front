@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+/**
+ * Allows to inform the server of a disconnection
+ */
 public class DisconnectionMessage extends Message {
 
 

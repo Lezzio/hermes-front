@@ -2,6 +2,9 @@ package fr.insalyon.hermes.model;
 
 import java.util.Date;
 
+/**
+ * Message used to exchange notification
+ */
 public class Notification extends Message {
     private String type;
     private String content;
