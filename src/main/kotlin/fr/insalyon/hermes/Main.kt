@@ -12,6 +12,7 @@ import fr.insalyon.hermes.chatManagePanel
 import fr.insalyon.hermes.client.HermesClient
 import fr.insalyon.hermes.components.*
 import fr.insalyon.hermes.dialog.*
+import kotlin.system.exitProcess
 
 var hermesClient: HermesClient? = null
 
@@ -20,6 +21,7 @@ fun main() = application {
         onCloseRequest = {
             hermesClient?.closeClient()
             exitApplication()
+            exitProcess(0)
         }
     ) {
         App()
@@ -44,7 +46,12 @@ fun App() {
             //Connecting user...
             appState.hermesClient.value = rememberSaveable { HermesClient(appState.username.value, appState) }
             if (appState.hermesClient.value?.isConnected == false) {
-                appState.hermesClient.value?.connect(appState.serverAddress.value, appState.serverPort.value)
+                try {
+                    appState.hermesClient.value?.connect(appState.serverAddress.value, appState.serverPort.value)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    appState.notification.value = "Couldn't establish the connection, try restarting the application" to true
+                }
                 hermesClient = appState.hermesClient.value
                 println("User connected as ${appState.username.value}")
             }

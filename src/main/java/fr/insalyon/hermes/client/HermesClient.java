@@ -542,6 +542,8 @@ public class HermesClient {
                 if (!isDesktopAppActive()) {
                     System.out.println("Disconnected");
                     System.exit(0);
+                } else {
+                    appState.getNotification().setValue(new Pair<>("The connection suddenly stopped", true));
                 }
 
             //If the server crash
@@ -550,8 +552,13 @@ public class HermesClient {
                 if (!isDesktopAppActive()) {
                     System.out.println("Connection with the server lost");
                     System.exit(0);
+                } else {
+                    appState.getNotification().setValue(new Pair<>("The connection suddenly stopped", true));
                 }
             } else {
+                if(isDesktopAppActive()) {
+                    appState.getNotification().setValue(new Pair<>(e.getMessage(), true));
+                }
                 e.printStackTrace();
             }
         }
