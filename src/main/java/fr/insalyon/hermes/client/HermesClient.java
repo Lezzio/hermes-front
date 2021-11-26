@@ -231,10 +231,7 @@ public class HermesClient {
                                 usersConnected.put(alertConnected.getUserConnected(), true);
                                 if (isDesktopAppActive()) {
                                     getUsers(currentChat.getChatName());
-//                                    Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
-//                                    appState.getUsersConnected().setValue(newUsersConnected);
                                 }
-                                //TODO: list connected update
                                 if (!isDesktopAppActive()) {
                                     displayAlert(alertConnected.getUserConnected() + " connected in the chat");
                                 }
@@ -245,19 +242,13 @@ public class HermesClient {
                     //This alert confirms the deconnection on the server of a user
                     case "AlertDisconnected":
                         AlertDisconnected alertDisconnected = (AlertDisconnected) receivedMessage;
-                        System.out.println("Got alert disconnected");
                         if (Objects.equals(alertDisconnected.getSender(), currentChat.getChatName())) {
                             usersConnected.put(alertDisconnected.getUserDisconnected(), false);
-                            System.out.println("Alert disconnected " + alertDisconnected.getSender() + " - " + currentChat.getChatName());
                             if (isDesktopAppActive()) {
                                 System.out.println("Asking users update");
                                 getUsers(currentChat.getChatName());
-//                                System.out.println("Disconnected user : " + alertDisconnected.getUserDisconnected());
-//                                Map<String, Boolean> newUsersConnected = new HashMap<>(usersConnected);
-//                                appState.getUsersConnected().setValue(newUsersConnected);
                             }
 
-                            //TODO: list connected update
                             if (!isDesktopAppActive()) {
                                 displayAlert(alertDisconnected.getUserDisconnected() + " disconnecting from the chat");
                             }
@@ -269,7 +260,6 @@ public class HermesClient {
                         AddNotification addNotification = (AddNotification) receivedMessage;
                         notifications.add(addNotification);
                         chats.add(addNotification.getChat());
-                        //TODO update notification and list chat panel
                         if (!isDesktopAppActive()) {
                             displayAlert(addNotification.getContent());
                         } else {
@@ -283,7 +273,6 @@ public class HermesClient {
                         BanNotification banNotification = (BanNotification) receivedMessage;
                         notifications.add(banNotification);
                         chats.removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
-                        //TODO update notification and list chat panel
                         if (currentChat!= null && Objects.equals(currentChat.getChatName(), banNotification.getSender())) {
                             if (chats.size() > 0) {
                                 accessChat(chats.get(0).getName());
@@ -296,7 +285,6 @@ public class HermesClient {
                         if (isDesktopAppActive()) {
                             appState.getNotification().setValue(new Pair<>(banNotification.getContent(), true));
                             //Update the available chatsf
-                            //appState.getChats().removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
                             getChats();
                         }
                         if (!isDesktopAppActive()) {
@@ -308,14 +296,12 @@ public class HermesClient {
                     case "GetNotifications":
                         GetNotifications getNotifications = (GetNotifications) receivedMessage;
                         this.notifications = getNotifications.getNotifications();
-                        //todo update
                         break;
 
                     //Gives the list of users that can be added to the current chat
                     case "GetUsersAddable":
                         GetUsersAddable getUsersAddable = (GetUsersAddable) receivedMessage;
                         currentUserAddable = getUsersAddable.getUsers();
-                        //TODO update
                         if (!isDesktopAppActive()) {
                             displayAddable();
                         } else {
@@ -337,7 +323,7 @@ public class HermesClient {
                             }
                             accessChat(chats.get(0).getName());
                         } else {
-                            isLoaded = true; //TODO : update page
+                            isLoaded = true;
                             if (isDesktopAppActive()) {
                                 appState.getChats().clear();
                                 appState.getCurrentChat().setValue(null);
@@ -370,15 +356,12 @@ public class HermesClient {
                         usersConnected = getUsers.getUsersConnected();
                         if (isDesktopAppActive()) {
                             System.out.println("Updating users");
-//                            usersConnected.forEach((user, connected) -> {
-//                                System.out.println("User = " + user + " connected = " + connected);
-//                            });
+
                             appState.getUsersConnected().setValue(null);
                             appState.getUsersConnected().setValue(getUsers.getUsersConnected());
                         } else {
                             displayConnected();
                         }
-                        //TODO : update page
                         break;
 
                     //Received when the server send an alert
@@ -389,7 +372,6 @@ public class HermesClient {
                         } else {
                             appState.getNotification().setValue(new Pair<>(alertMessage.getContent(), true));
                         }
-                        //TODO display l'alert
                         break;
 
                     //Gives the result of a chat creation request
@@ -412,7 +394,6 @@ public class HermesClient {
                             } else {
                                 System.out.println("Chat already used, change the name !");
                             }
-                            //TODO: display alert
                         }
                         break;
 
@@ -420,7 +401,6 @@ public class HermesClient {
                     case "DisconnectionMessage":
                         DisconnectionMessage disconnectionMessage = (DisconnectionMessage) receivedMessage;
                         this.isConnected = false;
-                        //TODO deco and delete this user
                         break;
 
                     //Gives the result when the user want to leave a chat
@@ -464,8 +444,7 @@ public class HermesClient {
                             //Get a fresh update of the chats
                             getChats();
                         }
-                        //TODO updateChat name if needed in currentChat and list chats
-                        //TODO update access if admin have changed
+
                         break;
 
                     //Simple TextMessage receeived in a chat
@@ -526,7 +505,6 @@ public class HermesClient {
                             appState.getChats().clear();
                             appState.getChats().addAll(snapshotStateList);
                         }
-                        //TODO update order
                         break;
                     default:
                         break;
