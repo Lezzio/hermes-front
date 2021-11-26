@@ -27,5 +27,6 @@ project
 │
 └───doc
      │  Javadoc API   
-
+└───build/libs
+     │  fichiers .jar   
 ```
